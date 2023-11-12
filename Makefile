@@ -10,11 +10,15 @@ LIBS=-l gtest        #  libgtest-dev
 #LIBS+=-l gmock      #  libgmock-dev
 #LIBS+=-l benchmark  #  libbenchmark-dev
 
+# Which compiler
+CC=g++
+#CC=clang++
+
 rb_test: $(TESTS) $(SOURCES) $(HEADERS)
 #  libgmock-dev libbenchmark-dev
 	@echo "Install Google test library: sudo apt-get install libgtest-dev"
 	@-rm rb_test 2> /dev/null
-	g++ --std=c++20 -Wall -Wextra -Werror -pedantic -O3 -flto=auto -DNDEBUG $(INCLUDE_DIRS) $(TESTS) $(SOURCES) $(LIBS) -o rb_test
+	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -O3 -flto=auto -DNDEBUG $(INCLUDE_DIRS) $(TESTS) $(SOURCES) $(LIBS) -o rb_test
 
 test: rb_test
 	./rb_test
@@ -22,7 +26,7 @@ test: rb_test
 rb_coverage:  $(TESTS) $(SOURCES) $(HEADERS) coverage-tool
 	@echo "Install Google test library: sudo apt-get install libgtest-dev"
 	@-rm *.gcno *.gcda 2> /dev/null
-	g++ --std=c++20 -Wall -Wextra -Werror -pedantic -Og -g -finline-limit=0 -DNDEBUG $(INCLUDE_DIRS) --coverage -fprofile-abs-path $(TESTS) $(SOURCES) $(LIBS) -o rb_coverage
+	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -Og -g -finline-limit=0 -DNDEBUG $(INCLUDE_DIRS) --coverage -fprofile-abs-path $(TESTS) $(SOURCES) $(LIBS) -o rb_coverage
 
 rb_coverage.info: rb_coverage coverage-tool
 	@echo "Install lcov: sudo apt-get install lcov"
@@ -38,7 +42,7 @@ coverage/index.html: rb_cleaned.info coverage-tool
 	@-rm -rf coverage/ 2> /dev/null
 	genhtml --show-details --demangle-cpp --branch-coverage --prefix $(realpath ..) rb_cleaned.info --output-directory coverage/
 
-coverage: rb_coverage rb_cleaned.info
+coverage: rb_coverage rb_cleaned.info coverage/index.html
 	@echo ""
 	@echo "See detailed coverage report at file " $(realpath ./coverage/index.html)
 
@@ -48,7 +52,7 @@ doc/html/index.html: Doxyfile $(SOURCES) $(HEADERS)
 doc: doxygen-tool doc/html/index.html $(SOURCES) $(HEADERS)
 	@echo "See detailed documentation at file " $(realpath ./doc/html/index.html)
 
-all: test coverage doc
+all: doc test coverage
 
 clean:
 	@-rm -rf rb_test rb_coverage *.gcno *.gcda *.info coverage/ doc/ 2> /dev/null
