@@ -69,7 +69,7 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const cp) -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
@@ -120,7 +120,7 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       real sum_w = real(0);
       Point sum_wp;
@@ -133,7 +133,7 @@ public:
     }(this->controlPoints_);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
+    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
@@ -173,7 +173,7 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       real sum_w = real(0);
       Point sum_wp;
@@ -186,7 +186,7 @@ public:
     }(controlPoints);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
+    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
@@ -199,7 +199,7 @@ public:
     }(controlPoints);
 
     // Calculate f"(u) and g"(u)
-    auto const [d2f_u, d2g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
+    auto const [d2f_u, d2g_u] = [u](ControlPointSpan const &cp) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
@@ -229,7 +229,7 @@ public:
 
     real length = real(0);
     auto const cumulate_segment_lengths = [&length](real const segment_length,
-                                                    PointAtCurve const segment_end) -> void {
+                                                    PointAtCurve const segment_end) noexcept -> void {
       (void)segment_end;
       length += segment_length;
     };
@@ -253,7 +253,7 @@ public:
     std::vector<Point> segment_ends;
     segment_ends.reserve(INITIAL_RESERVED_SIZE); // Might throw
     auto const cumulate_segment_lengths = [&segment_ends](real const segment_length,
-                                                          PointAtCurve const segment_end) -> void {
+                                                          PointAtCurve const segment_end) noexcept -> void {
       (void)segment_length;
       segment_ends.emplace_back(segment_end.point); // Might throw
     };
@@ -358,7 +358,7 @@ public:
     }
 
     auto const pickBestInitialGuesses = [p, &nearest](real const segment_length,
-                                                      PointAtCurve const segment_end) -> void {
+                                                      PointAtCurve const segment_end) noexcept -> void {
       (void)segment_length;
       ConstPoint difference = segment_end.point - p;
       real const distance_squared = difference.lengthSquared();
@@ -409,7 +409,7 @@ public:
        Define distance squared function:
        \f$D_{p}(u)=\left|C(u)-p\right|^{2}=\left|C(u)-p\right|_{x}^{2}+\cdots\f$
     */
-    auto const distanceSquared = [p, this](real const u) -> real {
+    auto const distanceSquared = [p, this](real const u) noexcept -> real {
       ConstPoint C_u = this->C(u);
 
       ConstPoint difference = C_u - p;
@@ -421,7 +421,7 @@ public:
     // f^2 = 2*f*f'
     // D_p'(u)/du = 2 * (C(u) - p) * C'(u)
     //            = 2 * (C(u).x - p.x) * C'(u).x + ...
-    auto const dDistanceSquared = [p, this](real const u) -> real {
+    auto const dDistanceSquared = [p, this](real const u) noexcept -> real {
       ConstPoint C_u = this->C(u);
 
       ConstPoint difference = (C_u - p) * real(2);
@@ -436,7 +436,7 @@ public:
        \f$\frac{d^{2}}{du^{2}}D_{p}(u)=\underset{h\rightarrow0}{\lim}\frac{\frac{d}{du}D_{p}(u+h)-\frac{d}{du}D_{p}(u)}{h}\approx\frac{\triangle\frac{d}{du}D_{p}(u)}{\triangle
        u}\f$
     */
-    auto const d2DistanceSquared = [dDistanceSquared](real const u) -> real {
+    auto const d2DistanceSquared = [dDistanceSquared](real const u) noexcept -> real {
       constexpr real du = real(1e-5);
       real const u_m = std::max(U_MIN, u - du);
       real const u_p = std::min(U_MAX, u + du);
@@ -473,7 +473,7 @@ public:
 
     // Sort (asc) by distances
     std::sort(potential_minimums.begin(), potential_minimums.end(),
-              [](DistanceFromLocation const &a, DistanceFromLocation const &b) -> bool {
+              [](DistanceFromLocation const &a, DistanceFromLocation const &b) noexcept -> bool {
                 return a.distanceSquared < b.distanceSquared;
               });
 
