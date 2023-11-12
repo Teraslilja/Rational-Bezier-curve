@@ -16,7 +16,7 @@
 namespace curve {
 namespace bezier {
 namespace rational {
-namespace internal {
+namespace {
 
 /**
  *  @brief The class to calculate rational bezier curves with control point of type 'CP', using either Point2<> or
@@ -485,7 +485,7 @@ private:
   ControlPointSpan const controlPoints_;
 };
 
-} // namespace internal
+} // namespace
 } // namespace rational
 } // namespace bezier
 } // namespace curve

@@ -18,7 +18,7 @@
 namespace curve {
 namespace bezier {
 namespace rational {
-namespace internal {
+namespace {
 
 /**
  *  @brief Define the calculation interface
@@ -114,7 +114,7 @@ struct CalculationInterface {
   /// @}
 };
 
-} // namespace internal
+} // namespace
 } // namespace rational
 } // namespace bezier
 } // namespace curve

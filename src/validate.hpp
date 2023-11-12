@@ -22,10 +22,10 @@ namespace rational {
  */
 template <class CP>
 requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
-class ValidateRational : public DelegationInterface<CP>, public internal::CalculationInterface<CP> {
+class ValidateRational : public DelegationInterface<CP>, public CalculationInterface<CP> {
 private:
   using Interface = DelegationInterface<CP>;
-  using Calculator = internal::CalculateRational<CP>;
+  using Calculator = CalculateRational<CP>;
 
 public:
   using ControlPoint = CP;
