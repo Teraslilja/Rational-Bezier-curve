@@ -87,9 +87,9 @@ struct DelegationInterface {
   using ConstPoint = Point const;
   using real = typename Point::real;
 
-  using point_or_issue = std::variant<Point, ValidityIssue>;
-  using real_or_issue = std::variant<real, ValidityIssue>;
-  using vector_of_points_or_issue = std::variant<std::vector<Point>, ValidityIssue>;
+  using point_or_issue = std::variant<ValidityIssue, Point>;
+  using real_or_issue = std::variant<ValidityIssue, real>;
+  using vector_of_points_or_issue = std::variant<ValidityIssue, std::vector<Point>>;
 
   /**
    *  @brief A default constructor

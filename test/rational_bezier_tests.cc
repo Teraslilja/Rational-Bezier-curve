@@ -53,7 +53,7 @@ static const std::vector<ControlPoint2> single_arc{cp_arc0, cp_arc1, cp_arc2end}
 /* /\/\ */
 static const std::vector<ControlPoint2> three_arcs{cp_arc0, cp_arc1, cp_arc2, cp_arc3, cp_arc4end};
 
-template <class T> inline std::ostream &operator<<(std::ostream &out, std::variant<T, ValidityIssue> const &data) {
+template <class T> inline std::ostream &operator<<(std::ostream &out, std::variant<ValidityIssue, T> const &data) {
   if (std::holds_alternative<T>(data)) {
     out << std::get<T>(data);
   }
