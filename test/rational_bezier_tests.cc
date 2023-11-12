@@ -2,12 +2,9 @@
 // (C) Matti Lehtonen 2023
 //
 
-#include "control_point.hpp"
 #include "rational_bezier.hpp"
 
 #include <gtest/gtest.h>
-
-#include <iostream>
 
 using real = float;
 using Point2 = curve::Point2<real>;

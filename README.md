@@ -9,6 +9,7 @@ The classes and structures
 * curve::bezier::rational::Rational manages control points.
 * curve::bezier::rational::ValidateRational validates the control points.
 * curve::bezier::rational::internal::CalculateRational implements the calculation related to the curve defined by control points.
-* curve::bezier::rational::DelegationInterface defines the delagation interface between Rational and ValidateRational.
+* curve::bezier::rational::DelegationInterface defines the functionality delagation interface between Rational and ValidateRational.
+* curve::bezier::rational::CalculationInterface defines the functionality delegation interface between ValidateRational and CalculateRational.
 
 The class Rational can be replaced with other implementations written by e.g. Python or C# as it only manages control points and passes control points as a span to class ValidateRational.

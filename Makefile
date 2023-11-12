@@ -2,9 +2,9 @@
 # (C) Matti Lehtonen 2023
 #
 INCLUDE_DIRS = -I ./src/ -I ./test/
-HEADERS = src/bernstein_polynomials.hpp src/control_point.hpp src/point.hpp src/newton_raphson.hpp src/rational_bezier.hpp
-SOURCES = src/point.cpp src/control_point.cpp src/bernstein_polynomials.cpp src/newton_raphson.cpp src/rational_bezier.cpp
-TESTS = test/point_tests.cc test/control_point_tests.cc test/bernstein_polynomials_tests.cc test/rational_bezier_tests.cc test/newton_raphson_tests.cc test/main.cc
+HEADERS = src/bernstein_polynomials.hpp src/control_point.hpp src/point.hpp src/newton_raphson.hpp src/calculation_interface.hpp src/delegation_interface.hpp src/calculate.hpp src/validate.hpp src/rational_bezier.hpp
+SOURCES = src/point.cpp src/control_point.cpp src/bernstein_polynomials.cpp src/newton_raphson.cpp src/calculation_interface.cpp src/delegation_interface.cpp src/calculate.cpp src/validate.cpp src/rational_bezier.cpp
+TESTS = test/point_tests.cc test/control_point_tests.cc test/bernstein_polynomials_tests.cc test/newton_raphson_tests.cc test/rational_bezier_tests.cc test/main.cc
 
 LIBS=-l gtest        #  libgtest-dev
 #LIBS+=-l gmock      #  libgmock-dev
