@@ -38,9 +38,9 @@ static const std::vector<ControlPoint2> horizontal_line{cp100, cp110};
 static const std::vector<ControlPoint2> slope_line{cp100, cp111};
 
 static constexpr real triangle_side = real(1);
-static constexpr real triangle_height = std::sqrt(real(0.75 * triangle_side));
+static const real triangle_height = std::sqrt(real(0.75) * triangle_side);
 static constexpr ControlPoint2 cp_arc0 = {real(1), Point2(real(0) * triangle_side, real(0))};
-static constexpr ControlPoint2 cp_arc1 = {real(0.5), Point2(real(0.5) * triangle_side, triangle_height)};
+static const ControlPoint2 cp_arc1 = {real(0.5), Point2(real(0.5) * triangle_side, triangle_height)};
 static constexpr ControlPoint2 cp_arc2end = {real(1), Point2(real(1) * triangle_side, real(0))};
 static const ControlPoint2 cp_arc2 = {real(0.5), Point2(real(1) * triangle_side, real(0))};
 static const ControlPoint2 cp_arc3 = {real(0.5), Point2(real(1.5) * triangle_side, triangle_height)};
@@ -296,7 +296,7 @@ TEST_P(VelocitySpeedTangentTests, tangentAt_correctValue) {
   validateResult(result, params.expectedTangentResult, EPS);
 }
 
-static constexpr real one_per_sqrt2 = real(1) / std::sqrt(real(2));
+static const real one_per_sqrt2 = real(1) / std::sqrt(real(2));
 
 static const VelocitySpeedTangentData velocitySpeedTangentData[]{
     {Rational2(empty), real(0.5), ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS,
