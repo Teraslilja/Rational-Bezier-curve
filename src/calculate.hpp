@@ -36,6 +36,9 @@ public:
 
   using ControlPointSpan = typename std::span<ConstControlPoint>;
 
+  using PointAtCurve = typename Interface::PointAtCurve;
+  using DistanceFromLocation = typename Interface::DistanceFromLocation;
+
   static real constexpr U_MIN = real(0); //< Minimum valid value of u
   static real constexpr U_MAX = real(1); //< Maximum valid value of u
 
@@ -226,7 +229,7 @@ public:
 
     real length = real(0);
     auto const cumulate_segment_lengths = [&length](real const segment_length,
-                                                    std::pair<real, ConstPoint> const segment_end) -> void {
+                                                    PointAtCurve const segment_end) -> void {
       (void)segment_end;
       length += segment_length;
     };
@@ -250,9 +253,9 @@ public:
     std::vector<Point> segment_ends;
     segment_ends.reserve(INITIAL_RESERVED_SIZE); // Might throw
     auto const cumulate_segment_lengths = [&segment_ends](real const segment_length,
-                                                          std::pair<real, ConstPoint> const segment_end) -> void {
+                                                          PointAtCurve const segment_end) -> void {
       (void)segment_length;
-      segment_ends.emplace_back(segment_end.second); // Might throw
+      segment_ends.emplace_back(segment_end.point); // Might throw
     };
 
     this->approximateAsLinestring(this->numberOfControlPoints(), REQUIRED_SEGMENT_LENGTH_ACCURACY,
@@ -288,10 +291,9 @@ public:
    * segment length, segment as a pair of u value and segment end point. The segments are feed to function in
    * reverse order.
    */
-  constexpr void
-  approximateAsLinestring(std::size_t const initial_vertices, real const max_segment_error,
-                          std::function<void(real const, std::pair<real, ConstPoint> const)> pick_segment) const {
-    std::vector<std::pair<real, ConstPoint>> vertices;
+  constexpr void approximateAsLinestring(std::size_t const initial_vertices, real const max_segment_error,
+                                         std::function<void(real const, PointAtCurve const)> pick_segment) const {
+    std::vector<PointAtCurve> vertices;
     std::size_t constexpr INITIAL_RESERVATION = 1u << 10u;
     vertices.reserve(std::max(INITIAL_RESERVATION, initial_vertices)); // Might throw
     constexpr std::size_t MINIMUM_AMOUNT = 2u;
@@ -310,19 +312,19 @@ public:
     // Pop segments, until no more segments available
     while (vertices.size() >= MINIMUM_AMOUNT) {
       // Cannot use reference there as allocation can invalidate reference!
-      auto const segment_end = vertices.back();
+      PointAtCurve const segment_end = vertices.back();
       vertices.pop_back();
 
       // Split segment, until accurate enough
       for (;;) {
-        auto const &segment_start = vertices.back();
-        real const single_segment_length = segment_start.second.distance(segment_end.second);
+        PointAtCurve const &segment_start = vertices.back();
+        real const single_segment_length = segment_start.point.distance(segment_end.point);
 
-        real const middle_u = real(0.5) * (segment_start.first + segment_end.first);
+        real const middle_u = real(0.5) * (segment_start.u + segment_end.u);
 
         ConstPoint middle_point = this->C(middle_u);
         real const dual_segment_length =
-            segment_start.second.distance(middle_point) + middle_point.distance(segment_end.second);
+            segment_start.point.distance(middle_point) + middle_point.distance(segment_end.point);
 
         if (dual_segment_length > (single_segment_length + max_segment_error)) {
           // Try again with a new start vertex for current segment
@@ -349,22 +351,22 @@ public:
    *  @param p The point that is used to calculate (squared) distances
    *  @param curveApproximation segment length error for generation of line string
    */
-  constexpr void initialGuessesFromCurve(std::vector<std::pair<real, real>> &nearest, ConstPoint p,
+  constexpr void initialGuessesFromCurve(std::vector<DistanceFromLocation> &nearest, ConstPoint p,
                                          real const curveApproximation) const noexcept {
     for (auto &p : nearest) {
-      p = std::make_pair(std::numeric_limits<real>::infinity(), std::numeric_limits<real>::infinity());
+      p = DistanceFromLocation();
     }
 
     auto const pickBestInitialGuesses = [p, &nearest](real const segment_length,
-                                                      std::pair<real, ConstPoint> const segment_end) -> void {
+                                                      PointAtCurve const segment_end) -> void {
       (void)segment_length;
-      ConstPoint difference = segment_end.second - p;
+      ConstPoint difference = segment_end.point - p;
       real const distance_squared = difference.lengthSquared();
       std::size_t const N = nearest.size();
-      if (distance_squared < nearest.at(N - 1u).first) {
+      if (distance_squared < nearest.at(N - 1u).distanceSquared) {
         std::size_t i = N - 1u;
         for (; i < N; --i) {
-          if (distance_squared < nearest.at(i).first) {
+          if (distance_squared < nearest.at(i).distanceSquared) {
             continue;
           }
           break;
@@ -379,8 +381,7 @@ public:
         }
 
         // Save the new value
-        nearest.at(i).first = distance_squared;
-        nearest.at(i).second = segment_end.first;
+        nearest.at(i) = {distance_squared, segment_end.u};
       }
     };
 
@@ -401,7 +402,7 @@ public:
     // Make a grude approximation of curve as a linestring and pick the top
     // 2N-1 of vertices as starting points for Newton method
     std::size_t const N = (this->numberOfControlPoints() << 1u) - 1u;
-    std::vector<std::pair<real, real>> nearest(N); // Might throw
+    std::vector<DistanceFromLocation> nearest(N); // Might throw
     initialGuessesFromCurve(nearest, p, REQUIRED_SEGMENT_LENGTH_ACCURACY);
 
     /**
@@ -451,34 +452,33 @@ public:
     std::size_t constexpr NEWTON_MAX_ROUND_LIMIT = 20u;
 
     // Reserve space for potential locations of minimum as tuples of distance^2 and u, might throw
-    std::vector<std::pair<real, real>> potential_minimums(
-        N + 2u, std::make_pair(std::numeric_limits<real>::infinity(), std::numeric_limits<real>::infinity()));
+    std::vector<DistanceFromLocation> potential_minimums(N + 2u);
 
     // Minimum can be at end of ranges of u = [0;1]
-    potential_minimums.at(0u) = std::make_pair(distanceSquared(U_MIN), U_MIN);
-    potential_minimums.at(1u) = std::make_pair(distanceSquared(U_MAX), U_MAX);
+    potential_minimums.at(0u) = {distanceSquared(U_MIN), U_MIN};
+    potential_minimums.at(1u) = {distanceSquared(U_MAX), U_MAX};
 
     // Minimum can be at location, where derivate of distance (squared) function is zero. Use Newton-Raphson method
     // to find them by using the 1st and 2nd derivates (approximate) of distance (squared) function
     for (std::size_t i = 0u; i < N; ++i) {
-      if (std::isfinite(nearest.at(i).second)) {
+      if (nearest.at(i).hasValidLocation()) {
         std::optional<real> const has_root = curve::internal::NewtonRaphson<real>::findRoot(
-            LOWER_BOUND, nearest.at(i).second, UPPER_BOUND, NEWTON_MAX_ROUND_LIMIT, dDistanceSquared,
-            d2DistanceSquared);
+            LOWER_BOUND, nearest.at(i).u, UPPER_BOUND, NEWTON_MAX_ROUND_LIMIT, dDistanceSquared, d2DistanceSquared);
         if (has_root.has_value()) {
-          potential_minimums.at(i + 2u) =
-              std::make_pair(distanceSquared(has_root.value()), potential_minimums.at(i).second = has_root.value());
+          potential_minimums.at(i + 2u) = {distanceSquared(has_root.value()),
+                                           potential_minimums.at(i).u = has_root.value()};
         }
       }
     }
 
     // Sort (asc) by distances
-    std::sort(
-        potential_minimums.begin(), potential_minimums.end(),
-        [](std::pair<real, real> const &a, std::pair<real, real> const &b) -> bool { return a.first < b.first; });
+    std::sort(potential_minimums.begin(), potential_minimums.end(),
+              [](DistanceFromLocation const &a, DistanceFromLocation const &b) -> bool {
+                return a.distanceSquared < b.distanceSquared;
+              });
 
     // There shall be at least two finite results from u=0 and u=1
-    return this->C(potential_minimums.at(0u).second);
+    return this->C(potential_minimums.at(0u).u);
   }
 
 private:
