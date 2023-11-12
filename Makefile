@@ -58,7 +58,6 @@ clean:
 	@-rm -rf rb_test rb_coverage *.gcno *.gcda *.info coverage/ doc/ 2> /dev/null
 
 format: format-tool $(TESTS) $(SOURCES) $(HEADERS)
-	@echo "Install clang-format: sudo apt-get install clang-format"
 	clang-format -i $(SOURCES) $(HEADERS) $(TESTS)
 
 cppcheck: cppcheck-tool $(TESTS) $(SOURCES) $(HEADERS)
@@ -83,5 +82,3 @@ doxygen-tool:
 # Install clang-format tool?
 format-tool: /usr/bin/clang-format
 	@echo "Install clang-format: sudo apt-get install clang-format"
-
-.PHONY: cppcheck-tool coverage-tool doxygen-tool format-tool
