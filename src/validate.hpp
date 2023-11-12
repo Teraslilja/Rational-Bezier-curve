@@ -9,8 +9,8 @@
 #ifndef VALIDATE_H
 #define VALIDATE_H
 
-#include "delegation_interface.hpp"
 #include "calculate.hpp"
+#include "delegation_interface.hpp"
 
 namespace curve {
 namespace bezier {
@@ -21,28 +21,32 @@ namespace rational {
  * Point3<> and if curve is valid, calculate points from it.
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::point>>
+requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
 class ValidateRational : public DelegationInterface<CP>, public internal::CalculationInterface<CP> {
 private:
-  using interface = DelegationInterface<CP>;
+  using Interface = DelegationInterface<CP>;
   using Calculator = internal::CalculateRational<CP>;
 
 public:
-  using ControlPoint = const CP; //< This class uses only read-only control points
-  using point = typename ControlPoint::point;
-  using real = typename point::real;
-  using span = typename std::span<const ControlPoint>;
+  using ControlPoint = CP;
+  using ConstControlPoint = ControlPoint const;
+  using Point = typename ControlPoint::Point;
+  using ConstPoint = Point const;
+  using real = typename Point::real;
 
-  using point_or_issue = typename interface::point_or_issue;
-  using real_or_issue = typename interface::real_or_issue;
-  using vector_of_points_or_issue = typename interface::vector_of_points_or_issue;
+  using ControlPointSpan = typename std::span<ConstControlPoint>;
+
+  using point_or_issue = typename Interface::point_or_issue;
+  using real_or_issue = typename Interface::real_or_issue;
+  using vector_of_points_or_issue = typename Interface::vector_of_points_or_issue;
 
   /**
    *  @brief Move constructor for object to validate and calculate rational bezier curve from given control points
    *
    *  @param controlPoints read-only span from actual container of control points
    */
-  inline constexpr ValidateRational(span const &&controlPoints) noexcept : calculator(std::move(controlPoints)) {}
+  inline constexpr ValidateRational(ControlPointSpan const &&controlPoints) noexcept
+      : calculator(std::move(controlPoints)) {}
 
   /**
    *  @brief A default destructor
@@ -86,7 +90,7 @@ private:
    */
   [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidWeights(real const u) const noexcept {
     real const sum_w = [u, this]() -> real {
-      span const &cp = this->calculator.getSpan();
+      ControlPointSpan const &cp = this->calculator.getSpan();
       std::size_t const n = cp.size() - 1u;
       real sum_w = real(0);
       for (std::size_t i = 0u; i <= n; ++i) {
@@ -201,7 +205,7 @@ public:
       return issue.value();
     }
 
-    std::vector<point> points;
+    std::vector<Point> points;
     try {
       points.reserve(us.size()); // Might throw
     }
@@ -252,10 +256,10 @@ public:
 
     if (this->calculator.numberOfControlPoints() < 2u) {
       // point as a degenerate curve
-      std::vector<point> single_point(1u, this->calculator.getSpan().front().p());
+      std::vector<Point> single_point(1u, this->calculator.getSpan().front().p());
       return single_point;
     } else {
-      std::vector<point> lineSegments = this->calculator.asLinestring();
+      std::vector<Point> lineSegments = this->calculator.asLinestring();
       return lineSegments;
     }
   }
@@ -289,7 +293,7 @@ public:
       return issue.value();
     }
 
-    point const velocity = this->calculator.dC(u);
+    ConstPoint velocity = this->calculator.dC(u);
     return velocity.length();
   }
 
@@ -307,12 +311,12 @@ public:
       return issue.value();
     }
 
-    point const velocity = this->calculator.dC(u);
+    ConstPoint velocity = this->calculator.dC(u);
 
     // It should be impossible NOT to normalize tangent ..
-    std::optional<point> const has_unit_length = velocity.normalize();
+    std::optional<ConstPoint> const has_unit_length = velocity.normalize();
     // .. but, if that happens, return vector with zero length
-    constexpr const point zero_length = point();
+    constexpr ConstPoint zero_length = ConstPoint();
     return has_unit_length.value_or(zero_length);
   }
 
@@ -350,7 +354,7 @@ public:
    *  @return one of points (if many) that is the closest one to the point 'p' as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue closestCurvePointFor(point const p) const noexcept {
+  [[nodiscard]] inline constexpr point_or_issue closestCurvePointFor(ConstPoint p) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();

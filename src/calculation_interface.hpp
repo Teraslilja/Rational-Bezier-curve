@@ -24,12 +24,15 @@ namespace internal {
  *  @brief Define the calculation interface
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::point>>
+requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
 struct CalculationInterface {
-  using ControlPoint = CP; //< This class uses only read-only control points
-  using point = typename ControlPoint::point;
-  using real = typename point::real;
-  using span = typename std::span<ControlPoint const>;
+  using ControlPoint = CP;
+  using ConstControlPoint = ControlPoint const;
+  using Point = typename ControlPoint::Point;
+  using ConstPoint = Point const;
+  using real = typename Point::real;
+
+  using ControlPointSpan = typename std::span<ConstControlPoint>;
 
   /**
    *  @brief A default constructor
@@ -42,19 +45,19 @@ struct CalculationInterface {
   inline constexpr ~CalculationInterface() = default;
 
   /// The methods of delegated interface @{
-  [[nodiscard]] constexpr point C(real const u) const noexcept;
+  [[nodiscard]] constexpr Point C(real const u) const noexcept;
   [[nodiscard]] inline constexpr std::size_t numberOfControlPoints() const noexcept;
-  [[nodiscard]] inline constexpr span const &getSpan() const noexcept;
-  [[nodiscard]] constexpr point dC(real const u) const noexcept;
-  [[nodiscard]] constexpr point d2C(span const controlPoints, real const u) noexcept;
+  [[nodiscard]] inline constexpr ControlPointSpan const &getSpan() const noexcept;
+  [[nodiscard]] constexpr Point dC(real const u) const noexcept;
+  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints, real const u) noexcept;
   [[nodiscard]] constexpr real length() const noexcept;
-  [[nodiscard]] constexpr std::vector<point> asLinestring() const;
+  [[nodiscard]] constexpr std::vector<Point> asLinestring() const;
   constexpr void
   approximateAsLinestring(std::size_t const initial_vertices, real const max_segment_error,
-                          std::function<void(real const, std::pair<real, point> const)> pick_segment) const;
-  constexpr void initialGuessesFromCurve(std::vector<std::pair<real, real>> &nearest, point const p,
+                          std::function<void(real const, std::pair<real, ConstPoint> const)> pick_segment) const;
+  constexpr void initialGuessesFromCurve(std::vector<std::pair<real, real>> &nearest, ConstPoint p,
                                          real const curveApproximation) const noexcept;
-  [[nodiscard]] constexpr point findNearestPointFor(point const p) const;
+  [[nodiscard]] constexpr Point findNearestPointFor(ConstPoint p) const;
   /// @}
 };
 

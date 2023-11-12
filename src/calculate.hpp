@@ -23,15 +23,18 @@ namespace internal {
  * Point3<>
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::point>>
+requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
 class CalculateRational : protected CalculationInterface<CP> {
 public:
-  using interface = CalculationInterface<CP>;
+  using Interface = CalculationInterface<CP>;
 
-  using ControlPoint = typename interface::ControlPoint;
-  using point = typename interface::ControlPoint::point;
-  using real = typename interface::ControlPoint::point::real;
-  using span = typename std::span<ControlPoint const>;
+  using ControlPoint = typename Interface::ControlPoint;
+  using ConstControlPoint = ControlPoint const;
+  using Point = typename Interface::ControlPoint::Point;
+  using ConstPoint = Point const;
+  using real = typename Interface::ControlPoint::Point::real;
+
+  using ControlPointSpan = typename std::span<ConstControlPoint>;
 
   static real constexpr U_MIN = real(0); //< Minimum valid value of u
   static real constexpr U_MAX = real(1); //< Maximum valid value of u
@@ -41,7 +44,7 @@ public:
    *
    *  @param controlPoints read-only span from actual container of control points
    */
-  inline constexpr CalculateRational(span const &&controlPoints) noexcept
+  inline constexpr CalculateRational(ControlPointSpan const &&controlPoints) noexcept
       : controlPoints_(std::move(controlPoints)) {}
 
   /**
@@ -55,7 +58,7 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr point C(real const u) const noexcept {
+  [[nodiscard]] constexpr Point C(real const u) const noexcept {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -63,9 +66,9 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](span const cp) -> std::tuple<point, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
-      point sum_wp;
+      Point sum_wp;
       real sum_w = real(0);
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::B(i, n, u) * cp[i].w();
@@ -75,7 +78,7 @@ public:
       return {sum_wp, sum_w};
     }(this->controlPoints_);
 
-    std::optional<point> const C_u = f_u / g_u;
+    std::optional<ConstPoint> const C_u = f_u / g_u;
     return C_u.value();
   }
 
@@ -93,7 +96,7 @@ public:
    *
    *  @return reference to the span of control points
    */
-  [[nodiscard]] inline constexpr span const &getSpan() const noexcept { return this->controlPoints_; }
+  [[nodiscard]] inline constexpr ControlPointSpan const &getSpan() const noexcept { return this->controlPoints_; }
 
   /**
    *  @brief Function C'(u) to calculate a derivate at 'u'. @see velocityAt()
@@ -101,7 +104,7 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr point dC(real const u) const noexcept {
+  [[nodiscard]] constexpr Point dC(real const u) const noexcept {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -114,10 +117,10 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](span const &cp) -> std::tuple<point, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       real sum_w = real(0);
-      point sum_wp;
+      Point sum_wp;
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::B(i, n, u) * cp[i].w();
         sum_w += w;
@@ -127,9 +130,9 @@ public:
     }(this->controlPoints_);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](span const &cp) -> std::tuple<point, real> {
+    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
-      point sum_wp;
+      Point sum_wp;
       real sum_w = real(0);
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::dB(i, n, u) * cp[i].w();
@@ -140,7 +143,7 @@ public:
     }(this->controlPoints_);
 
     // C'(u) = (f'(u) * g(u) - f(u) * g'(u)) / g(u)^2
-    std::optional<point> const dC_u = ((df_u * g_u) - (f_u * dg_u)) / (g_u * g_u);
+    std::optional<ConstPoint> const dC_u = ((df_u * g_u) - (f_u * dg_u)) / (g_u * g_u);
     return dC_u.value();
   }
 
@@ -152,7 +155,7 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr point d2C(span const controlPoints, real const u) noexcept {
+  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints, real const u) noexcept {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -167,10 +170,10 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](span const &cp) -> std::tuple<point, real> {
+    auto const [f_u, g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
       real sum_w = real(0);
-      point sum_wp;
+      Point sum_wp;
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::B(i, n, u) * cp[i].w();
         sum_w += w;
@@ -180,9 +183,9 @@ public:
     }(controlPoints);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](span const &cp) -> std::tuple<point, real> {
+    auto const [df_u, dg_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
-      point sum_wp;
+      Point sum_wp;
       real sum_w = real(0);
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::dB(i, n, u) * cp[i].w();
@@ -193,9 +196,9 @@ public:
     }(controlPoints);
 
     // Calculate f"(u) and g"(u)
-    auto const [d2f_u, d2g_u] = [u](span const &cp) -> std::tuple<point, real> {
+    auto const [d2f_u, d2g_u] = [u](ControlPointSpan const &cp) -> std::tuple<ConstPoint, real> {
       std::size_t const n = cp.size() - 1u;
-      point sum_wp;
+      Point sum_wp;
       real sum_w = real(0);
       for (std::size_t i = 0u; i <= n; ++i) {
         real const w = curve::bezier::internal::BernsteinPolynomials<real>::d2B(i, n, u) * cp[i].w();
@@ -207,7 +210,7 @@ public:
 
     // C"(u) = ( g'(u)^2 * f"(u) - g(u) * (2 * f'(u)*g'(u) + f(u) * g"(u)) + 2 *
     // f(u) * g'(u)^2) / g(u)^3
-    std::optional<point> const d2C_u =
+    std::optional<ConstPoint> const d2C_u =
         (d2f_u * (dg_u * dg_u) - (df_u * (real(2) * dg_u) + f_u * d2g_u) * g_u + f_u * (real(2) * dg_u * dg_u)) /
         (g_u * g_u * g_u);
     return d2C_u.value();
@@ -223,7 +226,7 @@ public:
 
     real length = real(0);
     auto const cumulate_segment_lengths = [&length](real const segment_length,
-                                                    std::pair<real, point> const segment_end) -> void {
+                                                    std::pair<real, ConstPoint> const segment_end) -> void {
       (void)segment_end;
       length += segment_length;
     };
@@ -240,14 +243,14 @@ public:
    *  @return a vector containing vertices between line segments
    *  @return a vector containning a single vertex, if curve has only one control point
    */
-  [[nodiscard]] constexpr std::vector<point> asLinestring() const {
+  [[nodiscard]] constexpr std::vector<Point> asLinestring() const {
     std::size_t constexpr INITIAL_RESERVED_SIZE = 1024u;
     real constexpr REQUIRED_SEGMENT_LENGTH_ACCURACY = real(1e-6);
 
-    std::vector<point> segment_ends;
+    std::vector<Point> segment_ends;
     segment_ends.reserve(INITIAL_RESERVED_SIZE); // Might throw
     auto const cumulate_segment_lengths = [&segment_ends](real const segment_length,
-                                                          std::pair<real, point> const segment_end) -> void {
+                                                          std::pair<real, ConstPoint> const segment_end) -> void {
       (void)segment_length;
       segment_ends.emplace_back(segment_end.second); // Might throw
     };
@@ -287,8 +290,8 @@ public:
    */
   constexpr void
   approximateAsLinestring(std::size_t const initial_vertices, real const max_segment_error,
-                          std::function<void(real const, std::pair<real, point> const)> pick_segment) const {
-    std::vector<std::pair<real, point>> vertices;
+                          std::function<void(real const, std::pair<real, ConstPoint> const)> pick_segment) const {
+    std::vector<std::pair<real, ConstPoint>> vertices;
     std::size_t constexpr INITIAL_RESERVATION = 1u << 10u;
     vertices.reserve(std::max(INITIAL_RESERVATION, initial_vertices)); // Might throw
     constexpr std::size_t MINIMUM_AMOUNT = 2u;
@@ -299,7 +302,7 @@ public:
       real const step = (U_MAX - U_MIN) / real(N - 1u);
       for (std::size_t i = 0u; i < N; ++i) {
         real const u = real(i) * step;
-        point const p = this->C(u);
+        ConstPoint p = this->C(u);
         vertices.emplace_back(u, p);
       }
     }
@@ -317,7 +320,7 @@ public:
 
         real const middle_u = real(0.5) * (segment_start.first + segment_end.first);
 
-        point const middle_point = this->C(middle_u);
+        ConstPoint middle_point = this->C(middle_u);
         real const dual_segment_length =
             segment_start.second.distance(middle_point) + middle_point.distance(segment_end.second);
 
@@ -346,16 +349,16 @@ public:
    *  @param p The point that is used to calculate (squared) distances
    *  @param curveApproximation segment length error for generation of line string
    */
-  constexpr void initialGuessesFromCurve(std::vector<std::pair<real, real>> &nearest, point const p,
+  constexpr void initialGuessesFromCurve(std::vector<std::pair<real, real>> &nearest, ConstPoint p,
                                          real const curveApproximation) const noexcept {
     for (auto &p : nearest) {
       p = std::make_pair(std::numeric_limits<real>::infinity(), std::numeric_limits<real>::infinity());
     }
 
     auto const pickBestInitialGuesses = [p, &nearest](real const segment_length,
-                                                      std::pair<real, point> const segment_end) -> void {
+                                                      std::pair<real, ConstPoint> const segment_end) -> void {
       (void)segment_length;
-      point const difference = segment_end.second - p;
+      ConstPoint difference = segment_end.second - p;
       real const distance_squared = difference.lengthSquared();
       std::size_t const N = nearest.size();
       if (distance_squared < nearest.at(N - 1u).first) {
@@ -392,7 +395,7 @@ public:
    *  @param p The point used to calculate distances to the curve
    *  @return one of the nearest point from curve to point 'p'l
    */
-  [[nodiscard]] constexpr point findNearestPointFor(point const p) const {
+  [[nodiscard]] constexpr Point findNearestPointFor(ConstPoint p) const {
     real constexpr REQUIRED_SEGMENT_LENGTH_ACCURACY = real(1e-3);
 
     // Make a grude approximation of curve as a linestring and pick the top
@@ -406,9 +409,9 @@ public:
        \f$D_{p}(u)=\left|C(u)-p\right|^{2}=\left|C(u)-p\right|_{x}^{2}+\cdots\f$
     */
     auto const distanceSquared = [p, this](real const u) -> real {
-      point const C_u = this->C(u);
+      ConstPoint C_u = this->C(u);
 
-      point const difference = C_u - p;
+      ConstPoint difference = C_u - p;
       real const distance_squared = difference.lengthSquared();
       return distance_squared;
     };
@@ -418,10 +421,10 @@ public:
     // D_p'(u)/du = 2 * (C(u) - p) * C'(u)
     //            = 2 * (C(u).x - p.x) * C'(u).x + ...
     auto const dDistanceSquared = [p, this](real const u) -> real {
-      point const C_u = this->C(u);
+      ConstPoint C_u = this->C(u);
 
-      point const difference = (C_u - p) * real(2);
-      point const derivate = this->dC(u);
+      ConstPoint difference = (C_u - p) * real(2);
+      ConstPoint derivate = this->dC(u);
       real const result = difference * derivate;
       return result;
     };
@@ -479,7 +482,7 @@ public:
   }
 
 private:
-  span const controlPoints_;
+  ControlPointSpan const controlPoints_;
 };
 
 } // namespace internal

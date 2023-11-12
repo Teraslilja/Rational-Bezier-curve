@@ -20,22 +20,25 @@ namespace rational {
  * Point3<>. Delegates calls to @ref curve::bezier::rational::ValidateRational
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::point>>
+requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
 class Rational : public DelegationInterface<CP> {
 private:
-  using interface = DelegationInterface<CP>;
+  using Interface = DelegationInterface<CP>;
 
 public:
-  using ControlPoint = typename interface::ControlPoint;
-  using point = typename interface::point;
-  using real = typename interface::point::real;
-  using container = typename std::vector<ControlPoint>;
-  using span = typename std::span<const ControlPoint>;
-  using validate = ValidateRational<ControlPoint>;
+  using ControlPoint = typename Interface::ControlPoint;
+  using ConstControlPoint = ControlPoint const;
+  using Point = typename Interface::Point;
+  using ConstPoint = Point const;
+  using real = typename Interface::Point::real;
 
-  using point_or_issue = typename interface::point_or_issue;
-  using real_or_issue = typename interface::real_or_issue;
-  using vector_of_points_or_issue = typename interface::vector_of_points_or_issue;
+  using ControlPointContainer = typename std::vector<ControlPoint>;
+  using ControlPointSpan = typename std::span<ConstControlPoint>;
+  using Validator = ValidateRational<ControlPoint>;
+
+  using point_or_issue = typename Interface::point_or_issue;
+  using real_or_issue = typename Interface::real_or_issue;
+  using vector_of_points_or_issue = typename Interface::vector_of_points_or_issue;
 
   /**
    *  @brief the default constructor
@@ -48,7 +51,7 @@ public:
    *
    *  @param cp The control points of 'CP to be copied to this curve
    */
-  inline constexpr Rational(container const &cp) {
+  inline constexpr Rational(ControlPointContainer const &cp) {
     this->controlPoints_.reserve(cp.size()); // Might throw
     this->controlPoints_.insert(this->controlPoints_.begin(), cp.cbegin(), cp.cend());
   }
@@ -59,12 +62,12 @@ public:
    *
    *  @param cp The control points of 'CP to be moved to this curve
    */
-  inline constexpr Rational(container &&cp) noexcept { this->controlPoints_ = std::move(cp); }
+  inline constexpr Rational(ControlPointContainer &&cp) noexcept { this->controlPoints_ = std::move(cp); }
 
   /**
    *  @brief Destructor for rational bezier curve
    */
-  inline constexpr ~Rational() noexcept { this->controlPoints_ = container(); }
+  inline constexpr ~Rational() noexcept { this->controlPoints_ = ControlPointContainer(); }
 
   /**
    *  @brief Output bezier curve 'data' to stream 'out'
@@ -89,7 +92,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr point_or_issue pointAt(real const u) const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.pointAt(u);
   }
 
@@ -100,7 +103,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr real_or_issue curveLength() const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.curveLength();
   }
 
@@ -112,7 +115,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr vector_of_points_or_issue asLinestring() const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.asLineString();
   }
 
@@ -124,7 +127,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr point_or_issue velocityAt(real const u) const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.velocityAt(u);
   }
 
@@ -136,7 +139,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr real_or_issue speedAt(real const u) const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.speedAt(u);
   }
 
@@ -148,7 +151,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
   [[nodiscard]] inline constexpr point_or_issue tangentAt(real const u) const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.tangentAt(u);
   }
 
@@ -186,8 +189,8 @@ public:
    *  @return one of points (if many) that is the closest one to the point 'p' as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline point_or_issue closestCurvePointFor(point const p) const noexcept {
-    validate const validator(this->controlPointContainerAsSpan());
+  [[nodiscard]] inline point_or_issue closestCurvePointFor(ConstPoint p) const noexcept {
+    Validator const validator(this->controlPointContainerAsSpan());
     return validator.closestCurvePointFor(p);
   }
 
@@ -311,12 +314,12 @@ public:
   inline constexpr void slim() noexcept { this->controlPoints_.shrink_to_fit(); }
 
 protected:
-  [[nodiscard]] inline constexpr span controlPointContainerAsSpan() const noexcept {
-    return span(this->controlPoints_.cbegin(), this->controlPoints_.size());
+  [[nodiscard]] inline constexpr ControlPointSpan controlPointContainerAsSpan() const noexcept {
+    return ControlPointSpan(this->controlPoints_.cbegin(), this->controlPoints_.size());
   }
 
 protected:
-  container controlPoints_; //< The container for control points
+  ControlPointContainer controlPoints_; //< The container for control points
 };
 
 } // namespace rational

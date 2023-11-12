@@ -79,15 +79,17 @@ inline std::ostream &operator<<(std::ostream &out, std::optional<ValidityIssue> 
  *  @brief The delegation interface between classes ValidateRational and Rational
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::point>>
+requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
 struct DelegationInterface {
   using ControlPoint = CP;
-  using point = typename ControlPoint::point;
-  using real = typename point::real;
+  using ConstControlPoint = ControlPoint const;
+  using Point = typename ControlPoint::Point;
+  using ConstPoint = Point const;
+  using real = typename Point::real;
 
-  using point_or_issue = std::variant<point, ValidityIssue>;
+  using point_or_issue = std::variant<Point, ValidityIssue>;
   using real_or_issue = std::variant<real, ValidityIssue>;
-  using vector_of_points_or_issue = std::variant<std::vector<point>, ValidityIssue>;
+  using vector_of_points_or_issue = std::variant<std::vector<Point>, ValidityIssue>;
 
   /**
    *  @brief A default constructor
@@ -106,7 +108,7 @@ struct DelegationInterface {
   [[nodiscard]] constexpr point_or_issue velocityAt(real const u) const noexcept;
   [[nodiscard]] constexpr real_or_issue speedAt(real const u) const noexcept;
   [[nodiscard]] constexpr point_or_issue tangentAt(real const u) const noexcept;
-  [[nodiscard]] constexpr point_or_issue closestCurvePointFor(point const p) const noexcept;
+  [[nodiscard]] constexpr point_or_issue closestCurvePointFor(ConstPoint p) const noexcept;
   /// @}
 };
 

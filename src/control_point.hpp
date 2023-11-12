@@ -24,7 +24,7 @@ template <class P, typename type = typename P::real>
 requires(std::is_same_v<P, Point2<typename P::real>> || std::is_same_v<P, Point3<typename P::real>>) &&
     std::is_floating_point_v<type> class ControlPoint {
 public:
-  using point = P;
+  using Point = P;
   using real = type;
 
   /**
@@ -33,7 +33,7 @@ public:
    *  @param w the weight of point
    *  @param p the point
    */
-  inline constexpr ControlPoint(real const w, point const p) noexcept : w_(w), p_(p) {}
+  inline constexpr ControlPoint(real const w, Point const p) noexcept : w_(w), p_(p) {}
 
   /**
    *  @brief Return value of weight for reading purposes
@@ -54,14 +54,14 @@ public:
    *
    *  @return the point
    */
-  [[nodiscard]] inline constexpr point p() const noexcept { return this->p_; }
+  [[nodiscard]] inline constexpr Point p() const noexcept { return this->p_; }
 
   /**
    *  @brief Return reference to (coordinate) values of control point for modifying purposes
    *
    *  @return the reference to point
    */
-  [[nodiscard]] inline constexpr point &p() noexcept { return this->p_; }
+  [[nodiscard]] inline constexpr Point &p() noexcept { return this->p_; }
 
   /**
    *  @brief Stream control point 'data' to output stream 'out'
@@ -70,7 +70,7 @@ public:
    *  @param data control point
    *  @return 'out' stream
    */
-  friend inline std::ostream &operator<<(std::ostream &out, ControlPoint<point> const &data) {
+  friend inline std::ostream &operator<<(std::ostream &out, ControlPoint<Point> const &data) {
     out << "{";
     out << data.w_ << "," << data.p_;
     out << "}";
@@ -84,7 +84,7 @@ public:
    *  @param data optional control point or if std::nullopt output string "'no value'"
    *  @return 'out' stream
    */
-  friend inline std::ostream &operator<<(std::ostream &out, std::optional<ControlPoint<point>> const &data) {
+  friend inline std::ostream &operator<<(std::ostream &out, std::optional<ControlPoint<Point>> const &data) {
     if (data.has_value()) {
       out << data.value();
     } else {
@@ -114,7 +114,7 @@ public:
 
 protected:
   real w_;  //< Weight of control point of rational bezier curve
-  point p_; //< Point of control point of rational bezier curve
+  Point p_; //< Point of control point of rational bezier curve
 };
 
 } // namespace rational
