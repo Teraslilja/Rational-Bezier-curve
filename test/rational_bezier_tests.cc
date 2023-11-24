@@ -7,8 +7,8 @@
 #include <gtest/gtest.h>
 
 using real = float;
-using Point2 = curve::Point2<real>;
-using Point3 = curve::Point3<real>;
+using Point2 = curve::points::Point2<real>;
+using Point3 = curve::points::Point3<real>;
 using ControlPoint2 = curve::bezier::rational::ControlPoint<Point2>;
 using ControlPoint3 = curve::bezier::rational::ControlPoint<Point3>;
 using Rational2 = curve::bezier::rational::Rational<ControlPoint2>;
@@ -19,13 +19,23 @@ using real_or_issue = Rational2::real_or_issue;
 using Point2_or_issue = Rational2::point_or_issue;
 using vector_of_Point2s_or_issue = Rational2::vector_of_points_or_issue;
 
+static constexpr real inf = std::numeric_limits<real>::infinity();
+static constexpr real qnan = std::numeric_limits<real>::quiet_NaN();
 static constexpr ControlPoint2 cp100 = {real(1), Point2(real(0), real(0))};
 static constexpr ControlPoint2 cp110 = {real(1), Point2(real(1), real(0))};
 static constexpr ControlPoint2 cp101 = {real(1), Point2(real(0), real(1))};
 static constexpr ControlPoint2 cp111 = {real(1), Point2(real(1), real(1))};
+static constexpr ControlPoint2 bad_weighti = {inf, Point2(real(1), real(1))};
+static constexpr ControlPoint2 bad_weightn = {qnan, Point2(real(1), real(1))};
+static constexpr ControlPoint2 bad_pointi = {real(1), Point2(inf, inf)};
+static constexpr ControlPoint2 bad_pointn = {real(1), Point2(qnan, qnan)};
 
 static constexpr std::vector<ControlPoint2> empty{};
 static const std::vector<ControlPoint2> single_point{cp100};
+static const std::vector<ControlPoint2> bad_point1{bad_weighti};
+static const std::vector<ControlPoint2> bad_point2{bad_weightn};
+static const std::vector<ControlPoint2> bad_point3{bad_pointi};
+static const std::vector<ControlPoint2> bad_point4{bad_pointn};
 
 /* | */
 static const std::vector<ControlPoint2> vertical_line{cp100, cp101};
@@ -161,6 +171,10 @@ static const PointAtData pointAtData[]{
     {Rational2(empty), real(0), ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS},
     {Rational2(single_point), real(-1), ValidityIssue::ISSUE_U_IS_INVALID},
     {Rational2(single_point), real(2), ValidityIssue::ISSUE_U_IS_INVALID},
+    {Rational2(bad_point1), real(0.5), ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT},
+    {Rational2(bad_point2), real(0.5), ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT},
+    {Rational2(bad_point3), real(0.5), ValidityIssue::ISSUE_BAD_POINT},
+    {Rational2(bad_point4), real(0.5), ValidityIssue::ISSUE_BAD_POINT},
 
     {Rational2(single_point), real(0), cp100.p()},
     {Rational2(single_point), real(1), cp100.p()},
@@ -217,6 +231,10 @@ static const CurveLengthData curveLengthData[]{
     {Rational2(three_arcs), real(2.253819)},
 
     {Rational2(bad_curve), ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS},
+    {Rational2(bad_point1), ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT},
+    {Rational2(bad_point2), ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT},
+    {Rational2(bad_point3), ValidityIssue::ISSUE_BAD_POINT},
+    {Rational2(bad_point4), ValidityIssue::ISSUE_BAD_POINT},
 };
 
 INSTANTIATE_TEST_SUITE_P(Fixture, CurveLengthTests, ::testing::ValuesIn(curveLengthData));

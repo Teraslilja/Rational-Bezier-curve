@@ -3,28 +3,30 @@
 //
 
 /**
- *  @file control_point.hpp This file contains implementation of control point class.
+ *  @file control_point.hpp This file contains module interface for control point
  */
 
 #ifndef CONTROL_POINT_H
 #define CONTROL_POINT_H
 
-#include "point.hpp"
+#include "point2.hpp"
+#include "point3.hpp"
 
 #include <vector>
 
-namespace curve {
-namespace bezier {
-namespace rational {
+namespace curve::bezier::rational {
 
 /**
- *  @brief Control point class for rational bezier curves. Uses either @ref curve::Point2 or @ref curve::Point3
+ *  @brief Control point class for rational bezier curves. Uses either @ref curve::points::Point2 or @ref
+ * curve::points::Point3
  */
 template <class P, typename type = typename P::real>
-requires(std::is_same_v<P, Point2<typename P::real>> || std::is_same_v<P, Point3<typename P::real>>) &&
+requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
+         std::is_same_v<P, curve::points::Point3<typename P::real>>) &&
     std::is_floating_point_v<type> class ControlPoint {
 public:
   using Point = P;
+  using Controlpoint = ControlPoint<Point, typename Point::real>;
   using real = type;
 
   /**
@@ -70,7 +72,7 @@ public:
    *  @param data control point
    *  @return 'out' stream
    */
-  friend inline std::ostream &operator<<(std::ostream &out, ControlPoint<Point> const &data) {
+  friend std::ostream &operator<<(std::ostream &out, Controlpoint const &data) {
     out << "{";
     out << data.w_ << "," << data.p_;
     out << "}";
@@ -84,7 +86,7 @@ public:
    *  @param data optional control point or if std::nullopt output string "'no value'"
    *  @return 'out' stream
    */
-  friend inline std::ostream &operator<<(std::ostream &out, std::optional<ControlPoint<Point>> const &data) {
+  friend std::ostream &operator<<(std::ostream &out, std::optional<Controlpoint> const &data) {
     if (data.has_value()) {
       out << data.value();
     } else {
@@ -100,13 +102,12 @@ public:
    *  @param data vector of control points
    *  @return 'out' stream
    */
-  friend inline std::ostream &operator<<(std::ostream &out, std::vector<ControlPoint> const &data) {
+  friend std::ostream &operator<<(std::ostream &out, std::vector<Controlpoint> const &data) {
     out << "[";
-    if (!data.empty()) {
-      out << data.front();
-      for (auto p = std::next(data.cbegin()); p != data.cend(); ++p) {
-        out << ", " << *p;
-      }
+    for (std::size_t i = 0u; auto const &p : data) {
+      out << ((i > 0u) ? ", " : "") << p;
+
+      ++i;
     }
     out << "]";
     return out;
@@ -117,7 +118,6 @@ protected:
   Point p_; //< Point of control point of rational bezier curve
 };
 
-} // namespace rational
-} // namespace bezier
-} // namespace curve
+} // namespace curve::bezier::rational
+
 #endif

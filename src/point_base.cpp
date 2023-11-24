@@ -2,6 +2,12 @@
 // (C) Matti Lehtonen 2023
 //
 
-#include "point.hpp"
+/**
+ *  @file point_base.cpp This file contains implementation related to point base
+ */
 
-namespace curve {}
+#include "point_base.hpp"
+
+namespace curve::points {
+//
+}

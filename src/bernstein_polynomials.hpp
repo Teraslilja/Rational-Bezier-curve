@@ -3,19 +3,16 @@
 //
 
 /**
- *  @file bernstein_polynomials.hpp This file contains implementation to
- * calculate Bernstein's polynomial factors
+ *  @file bernstein_polynomials.hpp This file contains module interface for calculation of Bernstein's polynomial
+ * factors
  */
 
 #ifndef BERNSTEIN_POLYNOMIALS_H
 #define BERNSTEIN_POLYNOMIALS_H
 
-#include <cassert>
 #include <type_traits>
 
-namespace curve {
-namespace bezier {
-namespace internal {
+namespace curve::bezier::utilities {
 
 /**
  *  @brief Define Bernstein's polynomials and it's the first two derivatives
@@ -36,6 +33,7 @@ namespace internal {
 template <typename type = float>
 requires std::is_floating_point_v<type>
 struct BernsteinPolynomials {
+public:
   using real = type;
 
 protected:
@@ -47,32 +45,31 @@ protected:
    *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
    *  @return 0 otherwise
    */
-  [[nodiscard]] static inline constexpr std::size_t binomial(std::size_t const n, std::size_t k) noexcept {
-    if (k > n) {
-      return 0u;
-    } else {
-      k = (k < (n >> 1u)) ? k : (n - k);
-      if (k == 0u) {
-        return 1u;
-      } else {
-        if (k == 1u) {
+  [[nodiscard]] static inline constexpr std::size_t binomial(std::size_t const n, std::size_t const k) noexcept {
+    auto constexpr bin = [](std::size_t const n, std::size_t k) -> std::size_t {
+      auto constexpr impl = [](auto const &bin, std::size_t const n, std::size_t k) -> std::size_t {
+        // k is left or right side of Pascal's triangle, use only left side
+        k = (k < (n >> 1u)) ? k : (n - k);
+        switch (k) {
+        case 0u:
+          return 1u;
+        case 1u:
           return n;
-        } else {
-          if (k == 2u) {
-            return (n * (n - 1u)) >> 1u;
-          } else {
-            return (binomial(n - 1u, k - 1u) * n) / k;
-          }
-        }
-      }
-    }
+        case 2u:
+          return (n * (n - 1u)) >> 1u;
+        };
+        return (bin(bin, n - 1u, k - 1u) * n) / k;
+      };
+      return impl(impl, n, k);
+    };
+    return (k > n) ? 0u : bin(n, k);
   }
 
   /**
    *  @brief Return 'x' to integer power 'i' \f$x^{i},x\in\mathbb{R},i\in\mathbb{N}_{0}\f$
    *
    *  @param x real value
-   *  @param i integer power
+   *  @param i ith integer power
    *  @return x to ith power
    */
   [[nodiscard]] static inline constexpr real toIntegerPower(real x, std::size_t i) noexcept {
@@ -133,7 +130,7 @@ public:
     return b;
   }
 };
-} // namespace internal
-} // namespace bezier
-} // namespace curve
+
+} // namespace curve::bezier::utilities
+
 #endif

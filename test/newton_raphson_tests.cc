@@ -9,7 +9,7 @@
 #include <iostream>
 
 using real = float;
-using NewtonRaphson = curve::internal::NewtonRaphson<real>;
+using NewtonRaphson = curve::bezier::utilities::NewtonRaphson<real>;
 
 struct NewtonRaphsonData {
   std::function<std::optional<real>(real const)> const f;

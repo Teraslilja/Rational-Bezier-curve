@@ -2,6 +2,12 @@
 // (C) Matti Lehtonen 2023
 //
 
-#include "point.hpp"
+/**
+ *  @file point2.cpp This file contains implementation related to 2D point
+ */
 
-namespace curve {}
+#include "point2.hpp"
+
+namespace curve::points {
+//
+} // namespace curve::points

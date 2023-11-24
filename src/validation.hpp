@@ -3,18 +3,16 @@
 //
 
 /**
- *  @file rational_bezier.hpp This file contains implementation of rational bezier class.
+ *  @file validation.hpp This file contains module interface for validation of rational bezier
  */
 
-#ifndef VALIDATE_H
-#define VALIDATE_H
+#ifndef VALIDATION_H
+#define VALIDATION_H
 
-#include "calculate.hpp"
-#include "delegation_interface.hpp"
+#include "calculation.hpp"
+#include "validation_interface.hpp"
 
-namespace curve {
-namespace bezier {
-namespace rational {
+namespace curve::bezier::rational {
 
 /**
  *  @brief The class to validate rational bezier curves with control point of type 'CP', using either Point2<> or
@@ -22,19 +20,17 @@ namespace rational {
  */
 template <class CP>
 requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
-class ValidateRational : public DelegationInterface<CP>, public CalculationInterface<CP> {
+class ValidateRational : private curve::bezier::rational::ValidationInterface<CP> {
 private:
-  using Interface = DelegationInterface<CP>;
-  using Calculator = CalculateRational<CP>;
+  using Interface = curve::bezier::rational::ValidationInterface<CP>;
+  using Calculator = curve::bezier::rational::CalculateRational<CP>;
 
 public:
   using ControlPoint = CP;
-  using ConstControlPoint = ControlPoint const;
   using Point = typename ControlPoint::Point;
-  using ConstPoint = Point const;
   using real = typename Point::real;
 
-  using ControlPointSpan = typename std::span<ConstControlPoint>;
+  using ControlPointSpan = typename std::span<ControlPoint const>;
 
   using point_or_issue = typename Interface::point_or_issue;
   using real_or_issue = typename Interface::real_or_issue;
@@ -82,20 +78,98 @@ private:
   }
 
   /**
+   *   @brief Is weight of control point valid
+   *
+   *   @param cp control point
+   *  @return true, if weight is valid
+   *  @return false otherwise
+   */
+  [[nodiscard]] static inline constexpr bool isWeightOfControlPointValid(ControlPoint const &cp) noexcept {
+    return std::isfinite(cp.w());
+  }
+
+  /**
+   *   @brief Are weights of control points valid
+   *
+   *  @return std::nullopt, if weights are valid
+   *  @return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT as std::optional otherwise
+   */
+  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasWeightsOfControlPointsValid() const noexcept {
+    ControlPointSpan const &cps = this->calculator.getSpan();
+    for (auto const &cp : cps) {
+      bool const valid = isWeightOfControlPointValid(cp);
+      if (!valid) {
+        return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT;
+      }
+    }
+    return std::nullopt;
+  }
+
+  /**
+   *  @brief Is coodenate value of point valid
+   *
+   *  @return true, if coordinate value is valid
+   *  @return false otherwise
+   */
+  [[nodiscard]] static inline constexpr bool isValidCoordinateValueOfPoint(real const v) noexcept {
+    return std::isfinite(v);
+  }
+
+  /**
+   *  @brief Are points of control points valid
+   *
+   *  @param cp control point
+   *  @return true, if point is valid
+   *  @return false otherwise
+   */
+  [[nodiscard]] static inline constexpr bool isValidPointOfControlPoint(ControlPoint const &cp) noexcept {
+    Point const &p = cp.p();
+    bool isValid = (p.getOrder() > 0u);
+    if constexpr (p.getOrder() >= 1u) {
+      isValid = isValid && isValidCoordinateValueOfPoint(p.x());
+    } else if constexpr (p.getOrder() >= 2u) {
+      isValid = isValid && isValidCoordinateValueOfPoint(p.y());
+    } else if constexpr (p.getOrder() >= 3u) {
+      isValid = isValid && isValidCoordinateValueOfPoint(p.z());
+    }
+
+    return isValid;
+  }
+
+  /**
+   *  @brief Are points of control points valid
+   *
+   *  @return std::nullopt, if points are valid
+   *  @return ValidityIssue::ISSUE_BAD_POINT as std::optional otherwise
+   */
+  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidPoints() const noexcept {
+    ControlPointSpan const &cps = this->calculator.getSpan();
+    for (auto const &cp : cps) {
+      bool const isValid = isValidPointOfControlPoint(cp);
+      if (!isValid) {
+        return ValidityIssue::ISSUE_BAD_POINT;
+      }
+    }
+    return std::nullopt;
+  }
+
+  /**
    *  @brief Check, if sum of curve's weights of control points isn't too close to zero
    *
    *  @param u curve parameter, valid range is [0;1]
    *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
    *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidWeights(real const u) const noexcept {
+  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidSumOfWeights(real const u) const noexcept {
     real const sum_w = [u, this]() -> real {
-      ControlPointSpan const &cp = this->calculator.getSpan();
-      std::size_t const n = cp.size() - 1u;
+      ControlPointSpan const &cps = this->calculator.getSpan();
+      std::size_t const n = cps.size() - 1u;
       real sum_w = real(0);
-      for (std::size_t i = 0u; i <= n; ++i) {
-        real const w = curve::bezier::internal::BernsteinPolynomials<real>::B(i, n, u) * cp[i].w();
+      for (std::size_t i = 0u; auto const &cp : cps) {
+        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) * cp.w();
         sum_w += w;
+
+        ++i;
       }
       return sum_w;
     }();
@@ -113,11 +187,24 @@ private:
    *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional otherwise
    */
   [[nodiscard]] inline constexpr std::optional<ValidityIssue> isValid(std::size_t const count) const noexcept {
-    std::optional<ValidityIssue> const issue = this->hasEnoughControlPoints(count);
+    std::optional<ValidityIssue> issue;
+
+    issue = this->hasEnoughControlPoints(count);
     if (issue.has_value()) {
       return issue.value();
     }
-    return this->hasValidWeights(real(0.5));
+
+    issue = hasValidPoints();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
+    issue = hasWeightsOfControlPointsValid();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
+    return this->hasValidSumOfWeights(real(0.5));
   }
 
   /**
@@ -136,11 +223,23 @@ private:
     if (issue.has_value()) {
       return issue.value();
     }
+
     issue = this->isValidU(u);
     if (issue.has_value()) {
       return issue.value();
     }
-    return this->hasValidWeights(u);
+
+    issue = hasValidPoints();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
+    issue = hasWeightsOfControlPointsValid();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
+    return this->hasValidSumOfWeights(u);
   }
 
   /**
@@ -160,13 +259,23 @@ private:
       return issue.value();
     }
 
+    issue = hasValidPoints();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
+    issue = hasWeightsOfControlPointsValid();
+    if (issue.has_value()) {
+      return issue.value();
+    }
+
     for (real const u : us) {
       issue = this->isValidU(u);
       if (issue.has_value()) {
         return issue.value();
       }
 
-      issue = this->hasValidWeights(u);
+      issue = this->hasValidSumOfWeights(u);
       if (issue.has_value()) {
         return issue.value();
       }
@@ -237,7 +346,7 @@ public:
       // point as a degenerate curve
       return real(0);
     } else {
-      return this->calculator.length();
+      return this->calculator.curveLength();
     }
   }
 
@@ -293,7 +402,7 @@ public:
       return issue.value();
     }
 
-    ConstPoint velocity = this->calculator.dC(u);
+    Point const velocity = this->calculator.dC(u);
     return velocity.length();
   }
 
@@ -311,12 +420,12 @@ public:
       return issue.value();
     }
 
-    ConstPoint velocity = this->calculator.dC(u);
+    Point const velocity = this->calculator.dC(u);
 
     // It should be impossible NOT to normalize tangent ..
-    std::optional<ConstPoint> const has_unit_length = velocity.normalize();
+    std::optional<Point const> const has_unit_length = velocity.normalize();
     // .. but, if that happens, return vector with zero length
-    constexpr ConstPoint zero_length = ConstPoint();
+    constexpr Point const zero_length = Point();
     return has_unit_length.value_or(zero_length);
   }
 
@@ -354,7 +463,7 @@ public:
    *  @return one of points (if many) that is the closest one to the point 'p' as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue closestCurvePointFor(ConstPoint p) const noexcept {
+  [[nodiscard]] inline constexpr point_or_issue closestCurvePointFor(Point const p) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
@@ -372,8 +481,6 @@ private:
   Calculator const calculator;
 };
 
-} // namespace rational
-} // namespace bezier
-} // namespace curve
+} // namespace curve::bezier::rational
 
 #endif

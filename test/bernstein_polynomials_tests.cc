@@ -10,8 +10,8 @@
 
 using real = float;
 
-struct Testing : public curve::bezier::internal::BernsteinPolynomials<real> {
-  using Base = curve::bezier::internal::BernsteinPolynomials<real>;
+struct Testing : public curve::bezier::utilities::BernsteinPolynomials<real> {
+  using Base = curve::bezier::utilities::BernsteinPolynomials<real>;
 
   [[nodiscard]] static inline constexpr std::size_t binomial(std::size_t const n, std::size_t const k) noexcept {
     return Base::binomial(n, k);

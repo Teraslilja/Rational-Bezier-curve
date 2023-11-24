@@ -9,8 +9,8 @@
 #include <iostream>
 
 using real = float;
-using Point2 = curve::Point2<real>;
-using Point3 = curve::Point3<real>;
+using Point2 = curve::points::Point2<real>;
+using Point3 = curve::points::Point3<real>;
 using ControlPoint2 = curve::bezier::rational::ControlPoint<Point2>;
 using ControlPoint3 = curve::bezier::rational::ControlPoint<Point3>;
 

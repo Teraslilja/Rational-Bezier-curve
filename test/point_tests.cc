@@ -2,15 +2,16 @@
 // (C) Matti Lehtonen 2023
 //
 
-#include "point.hpp"
+#include "point2.hpp"
+#include "point3.hpp"
 
 #include <gtest/gtest.h>
 
 #include <iostream>
 
 using real = float;
-using Point2 = curve::Point2<real>;
-using Point3 = curve::Point3<real>;
+using Point2 = curve::points::Point2<real>;
+using Point3 = curve::points::Point3<real>;
 
 TEST(PointConstructorTests, DefaultConstructor2_zeroValues) {
   Point2 const result;

@@ -3,27 +3,26 @@
 //
 
 /**
- *  @file rational_bezier.hpp This file contains implementation of rational bezier class.
+ *  @file rational_bezier.hpp This file contains module interface for rational bezier
  */
 
 #ifndef RATIONAL_BEZIER_H
 #define RATIONAL_BEZIER_H
 
-#include "validate.hpp"
+#include "validation.hpp"
+#include "validation_interface.hpp"
 
-namespace curve {
-namespace bezier {
-namespace rational {
+namespace curve::bezier::rational {
 
 /**
  *  @brief The class for rational bezier curves with management of control points of type 'CP', either Point2<> or
  * Point3<>. Delegates calls to @ref curve::bezier::rational::ValidateRational
  */
 template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
-class Rational : public DelegationInterface<CP> {
+requires std::is_same_v<CP, ControlPoint<typename CP::Point, typename CP::real>>
+class Rational : public ValidationInterface<CP> {
 private:
-  using Interface = DelegationInterface<CP>;
+  using Interface = ValidationInterface<CP>;
 
 public:
   using ControlPoint = typename Interface::ControlPoint;
@@ -76,7 +75,7 @@ public:
    *  @param data The rational bezier curve to be outputted
    *  @return the 'out' stream
    */
-  inline friend std::ostream &operator<<(std::ostream &out, Rational const &data) {
+  friend std::ostream &operator<<(std::ostream &out, Rational const &data) {
     out << "{";
     out << data.controlPoints_;
     out << "}";
@@ -246,7 +245,7 @@ public:
    *  @return true, if the index is within range [ 0 ; \<number of control points\> [
    *  @return false otherwise
    */
-  [[nodiscard]] inline constexpr bool addControlPoint(std::size_t const index, ControlPoint const cp) {
+  [[nodiscard]] inline constexpr bool addControlPoint(std::size_t const index, ControlPoint const cp) noexcept {
     if (index <= this->numberOfControlPoints()) {
       try {
         (void)this->controlPoints_.emplace(this->controlPoints_.begin() + index, cp); // Might throw
@@ -314,6 +313,11 @@ public:
   inline constexpr void slim() noexcept { this->controlPoints_.shrink_to_fit(); }
 
 protected:
+  /**
+   * @brief Return vector of control points as a span
+   *
+   * @return Container of control points as std::span
+   */
   [[nodiscard]] inline constexpr ControlPointSpan controlPointContainerAsSpan() const noexcept {
     return ControlPointSpan(this->controlPoints_.cbegin(), this->controlPoints_.size());
   }
@@ -322,8 +326,6 @@ protected:
   ControlPointContainer controlPoints_; //< The container for control points
 };
 
-} // namespace rational
-} // namespace bezier
-} // namespace curve
+} // namespace curve::bezier::rational
 
 #endif

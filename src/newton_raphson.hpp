@@ -3,8 +3,7 @@
 //
 
 /**
- *  @file newton_raphson.hpp This file contains implementation Newton-Raphson
- * algorithm
+ *  @file newton_raphson.hpp This file contains module interface for Newton-Raphson algorithm
  */
 
 #ifndef NEWTON_RAPHSON_H
@@ -12,18 +11,20 @@
 
 #include <functional>
 #include <optional>
+#include <type_traits>
 
-namespace curve {
-namespace internal {
+namespace curve::bezier::utilities {
 
-template <typename type = float>
-requires std::is_floating_point_v<type>
 /**
  *  @brief A structure to find root of function f(x) with help of f'(x)
  */
+template <typename type = float>
+requires std::is_floating_point_v<type>
 struct NewtonRaphson {
+public:
   using real = type;
 
+public:
   /**
    *  @brief Find root of function f, f(x) = 0 by Newton-Raphson method.
    *  Iterate: \f$x_{i+1}=x_{i}-\frac{f(x_{i})}{f'(x_{i})}\f$
@@ -80,6 +81,6 @@ struct NewtonRaphson {
   }
 };
 
-} // namespace internal
-} // namespace curve
+} // namespace curve::bezier::utilities
+
 #endif
