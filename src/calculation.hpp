@@ -14,6 +14,7 @@
 #include "newton_raphson.hpp"
 
 #include <cassert>
+#include <algorithm>
 
 namespace curve::bezier::rational {
 
@@ -592,9 +593,7 @@ protected:
         ++i;
 
         // Move worse results
-        for (std::size_t j = N - 1u; j > i; --j) {
-          nearest.at(j) = std::move(nearest.at(j - 1u));
-        }
+        std::move_backward( nearest.begin() + i, nearest.end() - 1u, nearest.end() );
 
         // Save the new value
         nearest.at(i) = {segment_end.u_, distance_squared};
