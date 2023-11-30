@@ -11,12 +11,9 @@
 
 #include "bernstein_polynomials.hpp"
 #include "calculation_interface.hpp"
-#include "control_point.hpp"
 #include "newton_raphson.hpp"
 
 #include <cassert>
-#include <optional>
-#include <ostream>
 
 namespace curve::bezier::rational {
 

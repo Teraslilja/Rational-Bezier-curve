@@ -9,7 +9,6 @@
 #ifndef CONTROL_POINT_H
 #define CONTROL_POINT_H
 
-#include "point2.hpp"
 #include "point3.hpp"
 
 #include <vector>

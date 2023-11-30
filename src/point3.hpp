@@ -10,7 +10,6 @@
 #define POINT3_H
 
 #include "point2.hpp"
-#include "point_base.hpp"
 
 namespace curve::points {
 

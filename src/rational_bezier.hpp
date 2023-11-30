@@ -10,7 +10,6 @@
 #define RATIONAL_BEZIER_H
 
 #include "validation.hpp"
-#include "validation_interface.hpp"
 
 namespace curve::bezier::rational {
 
