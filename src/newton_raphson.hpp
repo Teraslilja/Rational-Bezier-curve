@@ -13,6 +13,8 @@
 #include <optional>
 #include <type_traits>
 
+#include <cmath>
+
 namespace curve::bezier::utilities {
 
 /**
