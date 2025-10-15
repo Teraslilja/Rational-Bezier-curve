@@ -41,7 +41,7 @@ public:
   /**
    *  @brief the default constructor
    */
-  inline constexpr Rational() = default;
+  constexpr Rational() = default;
 
   /**
    *  @brief Constructor with vector of control points copied to the curve.
@@ -49,7 +49,7 @@ public:
    *
    *  @param cp The control points of 'CP to be copied to this curve
    */
-  inline constexpr Rational(ControlPointContainer const &cp) {
+  constexpr Rational(ControlPointContainer const &cp) {
     this->controlPoints_.reserve(cp.size()); // Might throw
     this->controlPoints_.insert(this->controlPoints_.begin(), cp.cbegin(), cp.cend());
   }
@@ -60,12 +60,12 @@ public:
    *
    *  @param cp The control points of 'CP to be moved to this curve
    */
-  inline constexpr Rational(ControlPointContainer &&cp) noexcept { this->controlPoints_ = std::move(cp); }
+  constexpr Rational(ControlPointContainer &&cp) noexcept { this->controlPoints_ = std::move(cp); }
 
   /**
    *  @brief Destructor for rational bezier curve
    */
-  inline constexpr ~Rational() noexcept { this->controlPoints_ = ControlPointContainer(); }
+  constexpr ~Rational() noexcept { this->controlPoints_ = ControlPointContainer(); }
 
   /**
    *  @brief Output bezier curve 'data' to stream 'out'
@@ -89,7 +89,7 @@ public:
    *  @return a point from curve, depending type of 'CP', either 2D or 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue pointAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue pointAt(real const u) const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.pointAt(u);
   }
@@ -100,7 +100,7 @@ public:
    *  @return the length of curve as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr real_or_issue curveLength() const noexcept {
+  [[nodiscard]] constexpr real_or_issue curveLength() const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.curveLength();
   }
@@ -112,7 +112,7 @@ public:
    *  @return a vector containning a single vertex, if curve has only one control point as std::optional
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr vector_of_points_or_issue asLinestring() const noexcept {
+  [[nodiscard]] constexpr vector_of_points_or_issue asLinestring() const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.asLineString();
   }
@@ -124,7 +124,7 @@ public:
    *  @return velocity at point from curve, depending type of 'CP', either 2D or 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue velocityAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue velocityAt(real const u) const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.velocityAt(u);
   }
@@ -136,7 +136,7 @@ public:
    *  @return speed at point from curve, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr real_or_issue speedAt(real const u) const noexcept {
+  [[nodiscard]] constexpr real_or_issue speedAt(real const u) const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.speedAt(u);
   }
@@ -148,7 +148,7 @@ public:
    *  @return tangent (unit length) at point from curve, depending type of 'CP', either 2D or 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue tangentAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue tangentAt(real const u) const noexcept {
     Validator const validator(this->controlPointContainerAsSpan());
     return validator.tangentAt(u);
   }
@@ -197,7 +197,7 @@ public:
    *
    *  @return Number of control point defined for the curve
    */
-  [[nodiscard]] inline constexpr std::size_t numberOfControlPoints() const noexcept {
+  [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept {
     return this->controlPoints_.size();
   }
 
@@ -210,7 +210,7 @@ public:
    *  @return Reference to control point to modify as std::optional
    *  @return std::nullopt, if input is invalid
    */
-  [[nodiscard]] inline constexpr std::optional<std::reference_wrapper<ControlPoint>> const
+  [[nodiscard]] constexpr std::optional<std::reference_wrapper<ControlPoint>> const
   getControlPoint(std::size_t const index) noexcept {
     if (index < this->numberOfControlPoints()) {
       return std::make_optional(std::ref(this->controlPoints_.at(index)));
@@ -227,7 +227,7 @@ public:
    *  @return Const control point for read access as std::optional
    *  @return std::nullopt, if input is invalid
    */
-  [[nodiscard]] inline constexpr std::optional<ControlPoint const> const
+  [[nodiscard]] constexpr std::optional<ControlPoint const> const
   getControlPoint(std::size_t const index) const noexcept {
     if (index < this->numberOfControlPoints()) {
       return std::make_optional(std::cref(this->controlPoints_.at(index)));
@@ -244,7 +244,7 @@ public:
    *  @return true, if the index is within range [ 0 ; \<number of control points\> [
    *  @return false otherwise
    */
-  [[nodiscard]] inline constexpr bool addControlPoint(std::size_t const index, ControlPoint const cp) noexcept {
+  [[nodiscard]] constexpr bool addControlPoint(std::size_t const index, ControlPoint const cp) noexcept {
     if (index <= this->numberOfControlPoints()) {
       try {
         (void)this->controlPoints_.emplace(this->controlPoints_.begin() + index, cp); // Might throw
@@ -267,7 +267,7 @@ public:
    *  @return true, if the index is within range [ 0 ; \<number of control points\> [
    *  @return false otherwise
    */
-  [[nodiscard]] inline constexpr bool removeControlPoint(std::size_t const index) noexcept {
+  [[nodiscard]] constexpr bool removeControlPoint(std::size_t const index) noexcept {
     if (index >= this->controlPoints_.size()) {
       return false;
     }
@@ -278,7 +278,7 @@ public:
   /**
    *  @brief Remove all control points from curve, allocation of container for control points is not changed.
    */
-  inline constexpr void removeAllControlPoints() noexcept { this->controlPoints_.clear(); }
+  constexpr void removeAllControlPoints() noexcept { this->controlPoints_.clear(); }
 
   /**
    *  @brief Return the current capacity of container for control points
@@ -286,7 +286,7 @@ public:
    *  @return Number of control points that can be stored to the container without increasing allocation for
    * container
    */
-  inline constexpr std::size_t capacity() const noexcept { return this->controlPoints_.capacity(); }
+  constexpr std::size_t capacity() const noexcept { return this->controlPoints_.capacity(); }
 
   /**
    *  @brief Reserve 'n' number of control points at container. Allocation is changed, if 'n' is greater than the
@@ -294,7 +294,7 @@ public:
    *
    *  @param n reserve space for 'n' control points
    */
-  inline constexpr bool reserve(std::size_t const n) {
+  constexpr bool reserve(std::size_t const n) {
     try {
       this->controlPoints_.reserve(n); // Might throw
     }
@@ -309,7 +309,7 @@ public:
   /**
    *  @brief Match capacity of container of control points with the number of control points at container
    */
-  inline constexpr void slim() noexcept { this->controlPoints_.shrink_to_fit(); }
+  constexpr void slim() noexcept { this->controlPoints_.shrink_to_fit(); }
 
 protected:
   /**
@@ -317,7 +317,7 @@ protected:
    *
    * @return Container of control points as std::span
    */
-  [[nodiscard]] inline constexpr ControlPointSpan controlPointContainerAsSpan() const noexcept {
+  [[nodiscard]] constexpr ControlPointSpan controlPointContainerAsSpan() const noexcept {
     return ControlPointSpan(this->controlPoints_.cbegin(), this->controlPoints_.size());
   }
 

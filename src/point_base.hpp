@@ -28,14 +28,14 @@ struct RequireXaccessInterface {
    *
    *  @return X coordinate for reading
    */
-  [[nodiscard]] inline constexpr real x() const noexcept;
+  [[nodiscard]] constexpr real x() const noexcept;
 
   /**
    *  @brief Return reference to X coordinate for modifying purposes
    *
    *  @return reference to X coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &x() noexcept;
+  [[nodiscard]] constexpr real &x() noexcept;
 };
 
 /**
@@ -49,14 +49,14 @@ struct RequireYaccessInterface {
    *
    *  @return Y coordinate for reading
    */
-  [[nodiscard]] inline constexpr real y() const noexcept;
+  [[nodiscard]] constexpr real y() const noexcept;
 
   /**
    *  @brief Return reference to Y coordinate for modifying purposes
    *
    *  @return reference to Y coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &y() noexcept;
+  [[nodiscard]] constexpr real &y() noexcept;
 };
 
 /**
@@ -70,14 +70,14 @@ struct RequireZaccessInterface {
    *
    *  @return Z coordinate for reading
    */
-  [[nodiscard]] inline constexpr real z() const noexcept;
+  [[nodiscard]] constexpr real z() const noexcept;
 
   /**
    *  @brief Return reference to Z coordinate for modifying purposes
    *
    *  @return reference to Z coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &z() noexcept;
+  [[nodiscard]] constexpr real &z() noexcept;
 };
 
 template <class T> struct NotRequired {};
@@ -110,12 +110,12 @@ public:
   /**
    *  @brief The default constructor. Coordinated are zeroed
    */
-  inline constexpr PointD() noexcept = default;
+  constexpr PointD() noexcept = default;
 
   /**
    *  @brief The destructor
    */
-  inline constexpr ~PointD() noexcept = default;
+  constexpr ~PointD() noexcept = default;
 
 public:
   /**
@@ -124,7 +124,7 @@ public:
    *  @param scale multiplication factor
    *  @return new point that is multiplied
    */
-  inline constexpr PointD operator*(real const scale) const noexcept;
+  constexpr PointD operator*(real const scale) const noexcept;
 
   /**
    *  @brief Dot product of two points
@@ -132,7 +132,7 @@ public:
    *  @param p another point
    *  @return Dot product of two points
    */
-  inline constexpr real operator*(PointD const p) const noexcept;
+  constexpr real operator*(PointD const p) const noexcept;
 
   /**
    *  @brief Divide coodinate vales of point by 'div'
@@ -141,7 +141,7 @@ public:
    *  @return the divided point as std::optional
    *  @return std::nullopt, if divided by zero or near zero
    */
-  [[nodiscard]] inline constexpr std::optional<PointD> operator/(real const div) const noexcept;
+  [[nodiscard]] constexpr std::optional<PointD> operator/(real const div) const noexcept;
 
   /**
    *  @brief Calculate substraction between this and another point 'p'
@@ -149,7 +149,7 @@ public:
    *  @param p point to be subracted from 'this'
    *  @return a new point containing the substraction
    */
-  [[nodiscard]] inline constexpr PointD operator-(PointD const p) const noexcept;
+  [[nodiscard]] constexpr PointD operator-(PointD const p) const noexcept;
 
   /**
    *  @brief Calculate addition between this and point 'p'
@@ -157,7 +157,7 @@ public:
    *  @param p point to be added to 'this'
    *  @return a new point containing the addition
    */
-  [[nodiscard]] inline constexpr PointD operator+(PointD const p) const noexcept;
+  [[nodiscard]] constexpr PointD operator+(PointD const p) const noexcept;
 
   /**
    *  @brief Add point 'p' to this point
@@ -165,7 +165,7 @@ public:
    *  @param p point to be added to 'this'
    *  @return 'this' point
    */
-  inline constexpr PointD &operator+=(PointD const p) noexcept;
+  constexpr PointD &operator+=(PointD const p) noexcept;
 
   /**
    *  @brief Calculate trace of point or sum of coordinate values. This is different than 1-norm:
@@ -173,21 +173,21 @@ public:
    *
    *  @return sum of coordinates
    */
-  [[nodiscard]] inline constexpr real trace() const noexcept;
+  [[nodiscard]] constexpr real trace() const noexcept;
 
   /**
    *  @brief Calculate squared length of point as vector
    *
    *  @return squared length
    */
-  [[nodiscard]] inline constexpr real lengthSquared() const noexcept;
+  [[nodiscard]] constexpr real lengthSquared() const noexcept;
 
   /**
    *  @brief Calcualate length of point as vector
    *
    *  @return length
    */
-  [[nodiscard]] inline constexpr real length() const noexcept;
+  [[nodiscard]] constexpr real length() const noexcept;
 
   /**
    *  @brief Calculate distance between this point and point 'p'
@@ -195,7 +195,7 @@ public:
    *  @param p the point calcualte distance to
    *  @return distance between points
    */
-  [[nodiscard]] inline constexpr real distance(PointD const p) const noexcept;
+  [[nodiscard]] constexpr real distance(PointD const p) const noexcept;
 
   /**
    *  @brief Normalize lenth of point (as a vector) to unit length
@@ -203,7 +203,7 @@ public:
    *  @return a point, which length is one as std::optional
    *  @return std::nullopt, if length of point is zero or near zero
    */
-  [[nodiscard]] inline constexpr std::optional<PointD> normalize() const noexcept;
+  [[nodiscard]] constexpr std::optional<PointD> normalize() const noexcept;
 
   /**
    *  @brief Return order or number of coordinate values point have

@@ -36,12 +36,12 @@ requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
   /**
    *  @brief Constructor
    */
-  inline constexpr PointAtCurve(real const u, Point const point) noexcept : u_{u}, point_{point} {};
+  constexpr PointAtCurve(real const u, Point const point) noexcept : u_{u}, point_{point} {};
 
   /**
    *  @brief Destructor
    */
-  inline constexpr ~PointAtCurve() noexcept = default;
+  constexpr ~PointAtCurve() noexcept = default;
 
   inline friend std::ostream &operator<<(std::ostream &out, PointAtCurve const data) {
     out << "{";
@@ -68,25 +68,25 @@ struct DistanceFromLocation {
   std::optional<Pair> pair_;
 
   /// @brief Constructor
-  inline constexpr DistanceFromLocation(real const u, real const distanceSquared) noexcept {
+  constexpr DistanceFromLocation(real const u, real const distanceSquared) noexcept {
     this->pair_ = {u, distanceSquared};
   };
 
   /// @brief A default constructor
-  inline constexpr DistanceFromLocation() noexcept : pair_{std::nullopt} {}
+  constexpr DistanceFromLocation() noexcept : pair_{std::nullopt} {}
 
   /// @brief A copy constructor
-  inline constexpr DistanceFromLocation(DistanceFromLocation const &v) noexcept : pair_{v.pair_} {};
+  constexpr DistanceFromLocation(DistanceFromLocation const &v) noexcept : pair_{v.pair_} {};
 
   /// @brief A copy operator
-  inline constexpr DistanceFromLocation &operator=(DistanceFromLocation const &v) noexcept {
+  constexpr DistanceFromLocation &operator=(DistanceFromLocation const &v) noexcept {
     this->pair_ = v.pair_;
 
     return *this;
   }
 
   /// @brief Destructor
-  inline constexpr ~DistanceFromLocation() noexcept = default;
+  constexpr ~DistanceFromLocation() noexcept = default;
 
   /**
    *  @brief Is the location of curve a valid one
@@ -94,7 +94,7 @@ struct DistanceFromLocation {
    *  @return true, if u is not infinity
    *  @return false, if u is infinity
    */
-  inline constexpr bool hasValidLocation() const noexcept { return this->pair_.has_value(); }
+  constexpr bool hasValidLocation() const noexcept { return this->pair_.has_value(); }
 
   /**
    *  @brief Get u
@@ -102,7 +102,7 @@ struct DistanceFromLocation {
    * @return infinity, if no value defined
    * @return stored u
    */
-  inline constexpr real getU() const noexcept {
+  constexpr real getU() const noexcept {
     constexpr type const UNDEFINED = std::numeric_limits<type>::infinity();
     return this->pair_.has_value() ? this->pair_.value().u_ : UNDEFINED;
   }
@@ -113,7 +113,7 @@ struct DistanceFromLocation {
    * @return infinity, if no value defined
    * @return stored distance squared
    */
-  inline constexpr real getDistanceSquared() const noexcept {
+  constexpr real getDistanceSquared() const noexcept {
     constexpr type const UNDEFINED = std::numeric_limits<type>::infinity();
     return this->pair_.has_value() ? this->pair_.value().distanceSquared_ : UNDEFINED;
   }
@@ -149,21 +149,21 @@ public:
   using PointAtCurve = internal::PointAtCurve<Point, real>;
   using DistanceFromLocation = internal::DistanceFromLocation<real>;
 
-  static real constexpr const U_MIN = real(0); //< Minimum valid value of u
-  static real constexpr const U_MAX = real(1); //< Maximum valid value of u
+  static inline real constexpr const U_MIN = real(0); //< Minimum valid value of u
+  static inline real constexpr const U_MAX = real(1); //< Maximum valid value of u
 
   /**
    *  @brief Move constructor for object to calculate rational bezier curve from given control points
    *
    *  @param controlPoints read-only span from actual container of control points
    */
-  inline constexpr CalculateRational(ControlPointSpan const &&controlPoints) noexcept
+  constexpr CalculateRational(ControlPointSpan const &&controlPoints) noexcept
       : controlPoints_(std::move(controlPoints)) {}
 
   /**
    *  @brief A default destructor
    */
-  inline constexpr ~CalculateRational() = default;
+  constexpr ~CalculateRational() = default;
 
 public:
   /**
@@ -171,7 +171,7 @@ public:
    *
    *  @return Number of control points
    */
-  [[nodiscard]] inline constexpr std::size_t numberOfControlPoints() const noexcept {
+  [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept {
     return this->controlPoints_.size();
   }
 
@@ -180,7 +180,7 @@ public:
    *
    *  @return reference to the span of control points
    */
-  [[nodiscard]] inline constexpr ControlPointSpan const &getSpan() const noexcept { return this->controlPoints_; }
+  [[nodiscard]] constexpr ControlPointSpan const &getSpan() const noexcept { return this->controlPoints_; }
 
   /**
    *  @brief Function C(u) to calculate a point at 'u'. @see pointAt()

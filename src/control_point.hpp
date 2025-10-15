@@ -34,35 +34,35 @@ public:
    *  @param w the weight of point
    *  @param p the point
    */
-  inline constexpr ControlPoint(real const w, Point const p) noexcept : w_(w), p_(p) {}
+  constexpr ControlPoint(real const w, Point const p) noexcept : w_(w), p_(p) {}
 
   /**
    *  @brief Return value of weight for reading purposes
    *
    *  @return the weight of control point
    */
-  [[nodiscard]] inline constexpr real w() const noexcept { return this->w_; }
+  [[nodiscard]] constexpr real w() const noexcept { return this->w_; }
 
   /**
    *  @brief Return reference of value of weight for modifying purposes
    *
    *  @return a reference to weight of control point
    */
-  [[nodiscard]] inline constexpr real &w() noexcept { return this->w_; }
+  [[nodiscard]] constexpr real &w() noexcept { return this->w_; }
 
   /**
    *  @brief Return (coordinate) values of control point for reading purposes
    *
    *  @return the point
    */
-  [[nodiscard]] inline constexpr Point p() const noexcept { return this->p_; }
+  [[nodiscard]] constexpr Point p() const noexcept { return this->p_; }
 
   /**
    *  @brief Return reference to (coordinate) values of control point for modifying purposes
    *
    *  @return the reference to point
    */
-  [[nodiscard]] inline constexpr Point &p() noexcept { return this->p_; }
+  [[nodiscard]] constexpr Point &p() noexcept { return this->p_; }
 
   /**
    *  @brief Stream control point 'data' to output stream 'out'

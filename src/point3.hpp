@@ -34,17 +34,17 @@ public:
   /**
    *  @brief The default constructor. Coordinated are zeroed
    */
-  inline constexpr Point3() noexcept : Point3(real(0), real(0), real(0)) {}
+  constexpr Point3() noexcept : Point3(real(0), real(0), real(0)) {}
 
   /**
    *  @brief Construct from Point2. Z Coordinate is zeroed
    */
-  inline constexpr Point3(Point2<real> const p) noexcept : Point3(real(p.x()), real(p.y()), real(0)) {}
+  constexpr Point3(Point2<real> const p) noexcept : Point3(real(p.x()), real(p.y()), real(0)) {}
 
   /**
    *  @brief The destructor
    */
-  inline constexpr ~Point3() noexcept = default;
+  constexpr ~Point3() noexcept = default;
 
   /**
    *  @brief Constructor with coordinates
@@ -53,7 +53,7 @@ public:
    *  @param y the y coordinates of point
    *  @param z the z coordinates of point
    */
-  inline constexpr Point3(real const x, real const y, real const z) noexcept {
+  constexpr Point3(real const x, real const y, real const z) noexcept {
     this->x() = x;
     this->y() = y;
     this->z() = z;
@@ -65,7 +65,7 @@ public:
    *
    *  @return X coordinate for reading
    */
-  [[nodiscard]] inline constexpr real x() const noexcept {
+  [[nodiscard]] constexpr real x() const noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::X);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -76,7 +76,7 @@ public:
    *
    *  @return reference to X coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &x() noexcept {
+  [[nodiscard]] constexpr real &x() noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::X);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -87,7 +87,7 @@ public:
    *
    *  @return Y coordinate for reading
    */
-  [[nodiscard]] inline constexpr real y() const noexcept {
+  [[nodiscard]] constexpr real y() const noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::Y);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -98,7 +98,7 @@ public:
    *
    *  @return reference to Y coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &y() noexcept {
+  [[nodiscard]] constexpr real &y() noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::Y);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -109,7 +109,7 @@ public:
    *
    *  @return Z coordinate for reading
    */
-  [[nodiscard]] inline constexpr real z() const noexcept {
+  [[nodiscard]] constexpr real z() const noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::Z);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -120,7 +120,7 @@ public:
    *
    *  @return reference to Z coordinate for writing
    */
-  [[nodiscard]] inline constexpr real &z() noexcept {
+  [[nodiscard]] constexpr real &z() noexcept {
     constexpr const std::size_t index = std::size_t(Dimension::Z);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -132,7 +132,7 @@ public:
    *  @param scale multiplication factor
    *  @return new point that is multiplied
    */
-  inline constexpr Point operator*(real const scale) const noexcept {
+  constexpr Point operator*(real const scale) const noexcept {
     return Point(scale * this->x(), scale * this->y(), scale * this->z());
   }
 
@@ -142,7 +142,7 @@ public:
    *  @param p another point
    *  @return Dot product of two points
    */
-  inline constexpr real operator*(Point const p) const noexcept {
+  constexpr real operator*(Point const p) const noexcept {
     return this->x() * p.x() + this->y() * p.y() + this->z() * p.z();
   }
 
@@ -153,7 +153,7 @@ public:
    *  @return the divided point as std::optional
    *  @return std::nullopt, if divided by zero or near zero
    */
-  [[nodiscard]] inline constexpr std::optional<Point> operator/(real const div) const noexcept {
+  [[nodiscard]] constexpr std::optional<Point> operator/(real const div) const noexcept {
     bool const state = std::abs(div) < std::numeric_limits<real>::epsilon();
     return state ? std::nullopt : std::make_optional(Point(this->x() / div, this->y() / div, this->z() / div));
   }
@@ -164,7 +164,7 @@ public:
    *  @param p point to be subracted from 'this'
    *  @return a new point containing the substraction
    */
-  [[nodiscard]] inline constexpr Point operator-(Point const p) const noexcept {
+  [[nodiscard]] constexpr Point operator-(Point const p) const noexcept {
     return Point(this->x() - p.x(), this->y() - p.y(), this->z() - p.z());
   }
 
@@ -174,7 +174,7 @@ public:
    *  @param p point to be added to 'this'
    *  @return a new point containing the addition
    */
-  [[nodiscard]] inline constexpr Point operator+(Point const p) const noexcept {
+  [[nodiscard]] constexpr Point operator+(Point const p) const noexcept {
     return Point(this->x() + p.x(), this->y() + p.y(), this->z() + p.z());
   }
 
@@ -184,7 +184,7 @@ public:
    *  @param p point to be added to 'this'
    *  @return 'this' point
    */
-  inline constexpr Point &operator+=(Point const p) noexcept {
+  constexpr Point &operator+=(Point const p) noexcept {
     this->x() += p.x();
     this->y() += p.y();
     this->z() += p.z();
@@ -197,14 +197,14 @@ public:
    *
    *  @return sum of coordinates
    */
-  [[nodiscard]] inline constexpr real trace() const noexcept { return this->x() + this->y() + this->z(); }
+  [[nodiscard]] constexpr real trace() const noexcept { return this->x() + this->y() + this->z(); }
 
   /**
    *  @brief Calculate squared length of point as vector
    *
    *  @return squared length
    */
-  [[nodiscard]] inline constexpr real lengthSquared() const noexcept {
+  [[nodiscard]] constexpr real lengthSquared() const noexcept {
     return this->x() * this->x() + this->y() * this->y() + this->z() * this->z();
   }
 
@@ -213,7 +213,7 @@ public:
    *
    *  @return length
    */
-  [[nodiscard]] inline constexpr real length() const noexcept { return std::sqrt(this->lengthSquared()); }
+  [[nodiscard]] constexpr real length() const noexcept { return std::sqrt(this->lengthSquared()); }
 
   /**
    *  @brief Calculate distance between this point and point 'p'
@@ -221,7 +221,7 @@ public:
    *  @param p the point calcualte distance to
    *  @return distance between points
    */
-  [[nodiscard]] inline constexpr real distance(Point const p) const noexcept {
+  [[nodiscard]] constexpr real distance(Point const p) const noexcept {
     Point const difference = *this - p;
     return difference.length();
   }
@@ -232,7 +232,7 @@ public:
    *  @return a point, which length is one as std::optional
    *  @return std::nullopt, if length of point is zero or near zero
    */
-  [[nodiscard]] inline constexpr std::optional<Point> normalize() const noexcept { return *this / this->length(); }
+  [[nodiscard]] constexpr std::optional<Point> normalize() const noexcept { return *this / this->length(); }
 
   /**
    *  @brief Return order or number of coordinate values point have

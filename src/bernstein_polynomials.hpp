@@ -220,7 +220,7 @@ public:
    *  @return \f$B_{i,n}(u)\f$
    *  @return zero, if i & n are not valid
    */
-  [[nodiscard]] static inline constexpr real B(int const i, int const n, real const u) noexcept {
+  [[nodiscard]] static constexpr real B(int const i, int const n, real const u) noexcept {
     if ((i > n) || (n < 0) || (i < 0)) {
       return real(0);
     }
@@ -237,7 +237,7 @@ public:
    *  @return \f$B_{i,n}(u)\f$
    *  @return zero, if i & n are not valid
    */
-  [[nodiscard]] static inline constexpr real dB(int const i, int const n, real const u) noexcept {
+  [[nodiscard]] static constexpr real dB(int const i, int const n, real const u) noexcept {
     real const b = real(n) * (B(i - 1, n - 1, u) - B(i, n - 1, u));
     return b;
   }
@@ -251,7 +251,7 @@ public:
    *  @return \f$B_{i,n}(u)\f$
    *  @return zero, if i & n are not valid
    */
-  [[nodiscard]] static inline constexpr real d2B(int const i, int const n, real const u) noexcept {
+  [[nodiscard]] static constexpr real d2B(int const i, int const n, real const u) noexcept {
     real const b = real(n) * real(n - 1) * (B(i, n - 2, u) - real(2) * B(i - 1, n - 2, u) + B(i - 2, n - 2, u));
     return b;
   }

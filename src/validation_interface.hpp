@@ -66,12 +66,12 @@ public:
   /**
    *  @brief A default constructor
    */
-  inline constexpr ValidationInterface() = default;
+  constexpr ValidationInterface() = default;
 
   /**
    *  @brief A default destructor
    */
-  inline constexpr ~ValidationInterface() = default;
+  constexpr ~ValidationInterface() = default;
 
   /// The methods of delegated interface @{
   [[nodiscard]] constexpr point_or_issue pointAt(real const u) const noexcept;

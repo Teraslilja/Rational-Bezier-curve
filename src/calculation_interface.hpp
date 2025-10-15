@@ -30,16 +30,16 @@ struct CalculationInterface {
   /**
    *  @brief A default constructor
    */
-  inline constexpr CalculationInterface() = default;
+  constexpr CalculationInterface() = default;
 
   /**
    *  @brief A default destructor
    */
-  inline constexpr ~CalculationInterface() = default;
+  constexpr ~CalculationInterface() = default;
 
   /// @brief The methods of calculation interface @{
-  [[nodiscard]] inline constexpr std::size_t numberOfControlPoints() const noexcept;
-  [[nodiscard]] inline constexpr ControlPointSpan const &getSpan() const noexcept;
+  [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept;
+  [[nodiscard]] constexpr ControlPointSpan const &getSpan() const noexcept;
 
   [[nodiscard]] constexpr Point C(real const u) const noexcept;
   [[nodiscard]] constexpr Point dC(real const u) const noexcept;

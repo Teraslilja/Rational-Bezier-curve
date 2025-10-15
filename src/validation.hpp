@@ -41,13 +41,13 @@ public:
    *
    *  @param controlPoints read-only span from actual container of control points
    */
-  inline constexpr ValidateRational(ControlPointSpan const &&controlPoints) noexcept
+  constexpr ValidateRational(ControlPointSpan const &&controlPoints) noexcept
       : calculator(std::move(controlPoints)) {}
 
   /**
    *  @brief A default destructor
    */
-  inline constexpr ~ValidateRational() noexcept = default;
+  constexpr ~ValidateRational() noexcept = default;
 
 private:
   /**
@@ -57,7 +57,7 @@ private:
    *  @return std::nullopt, if parameter 'u' is valid
    *  @return ValidityIssue::ISSUE_U_IS_INVALID as std::optional otherwise
    */
-  [[nodiscard]] static inline constexpr std::optional<ValidityIssue> isValidU(real const u) noexcept {
+  [[nodiscard]] static constexpr std::optional<ValidityIssue> isValidU(real const u) noexcept {
     return ((u >= Calculator::U_MIN) && (u <= Calculator::U_MAX))
                ? std::nullopt
                : std::make_optional(ValidityIssue::ISSUE_U_IS_INVALID);
@@ -70,7 +70,7 @@ private:
    *  @return std::nullopt, if enough control points
    *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue>
+  [[nodiscard]] constexpr std::optional<ValidityIssue>
   hasEnoughControlPoints(std::size_t const count) const noexcept {
     return (this->calculator.numberOfControlPoints() >= count)
                ? std::nullopt
@@ -84,7 +84,7 @@ private:
    *  @return true, if weight is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static inline constexpr bool isWeightOfControlPointValid(ControlPoint const &cp) noexcept {
+  [[nodiscard]] static constexpr bool isWeightOfControlPointValid(ControlPoint const &cp) noexcept {
     return std::isfinite(cp.w());
   }
 
@@ -94,7 +94,7 @@ private:
    *  @return std::nullopt, if weights are valid
    *  @return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasWeightsOfControlPointsValid() const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasWeightsOfControlPointsValid() const noexcept {
     ControlPointSpan const &cps = this->calculator.getSpan();
     for (auto const &cp : cps) {
       bool const valid = isWeightOfControlPointValid(cp);
@@ -106,12 +106,12 @@ private:
   }
 
   /**
-   *  @brief Is coodenate value of point valid
+   *  @brief Is coordinate value of point valid
    *
    *  @return true, if coordinate value is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static inline constexpr bool isValidCoordinateValueOfPoint(real const v) noexcept {
+  [[nodiscard]] static constexpr bool isValidCoordinateValueOfPoint(real const v) noexcept {
     return std::isfinite(v);
   }
 
@@ -122,7 +122,7 @@ private:
    *  @return true, if point is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static inline constexpr bool isValidPointOfControlPoint(ControlPoint const &cp) noexcept {
+  [[nodiscard]] static constexpr bool isValidPointOfControlPoint(ControlPoint const &cp) noexcept {
     Point const &p = cp.p();
     bool isValid = (p.getOrder() > 0u);
     if constexpr (p.getOrder() >= 1u) {
@@ -142,7 +142,7 @@ private:
    *  @return std::nullopt, if points are valid
    *  @return ValidityIssue::ISSUE_BAD_POINT as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidPoints() const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidPoints() const noexcept {
     ControlPointSpan const &cps = this->calculator.getSpan();
     for (auto const &cp : cps) {
       bool const isValid = isValidPointOfControlPoint(cp);
@@ -160,7 +160,7 @@ private:
    *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
    *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> hasValidSumOfWeights(real const u) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidSumOfWeights(real const u) const noexcept {
     real const sum_w = [u, this]() -> real {
       ControlPointSpan const &cps = this->calculator.getSpan();
       std::size_t const n = cps.size() - 1u;
@@ -186,7 +186,7 @@ private:
    *  @return std::nullopt, if enough control points
    *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> isValid(std::size_t const count) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count) const noexcept {
     std::optional<ValidityIssue> issue;
 
     issue = this->hasEnoughControlPoints(count);
@@ -216,7 +216,7 @@ private:
    *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
    *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
                                                                       real const u) const noexcept {
     std::optional<ValidityIssue> issue;
     issue = this->hasEnoughControlPoints(count);
@@ -251,7 +251,7 @@ private:
    *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
    *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
    */
-  [[nodiscard]] inline constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
                                                                       std::span<real> const us) const noexcept {
     std::optional<ValidityIssue> issue;
     issue = this->hasEnoughControlPoints(count);
@@ -292,7 +292,7 @@ public:
    *  @return a point from curve, depending type of 'CP', either 2D or 3D, as std::variant
    *  @return Issue ID as std::variant, if curve is invalid
    */
-  [[nodiscard]] inline constexpr point_or_issue pointAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue pointAt(real const u) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -336,7 +336,7 @@ public:
    *  @return the length of curve as std::variant
    *  @return Issue numner, if curve is invalid
    */
-  [[nodiscard]] inline constexpr real_or_issue curveLength() const noexcept {
+  [[nodiscard]] constexpr real_or_issue curveLength() const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
@@ -357,7 +357,7 @@ public:
    *  @return a vector containning a single vertex, if curve has only one control point as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr vector_of_points_or_issue asLineString() const noexcept {
+  [[nodiscard]] constexpr vector_of_points_or_issue asLineString() const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
@@ -380,7 +380,7 @@ public:
    *  @return velocity at point from curve, depending type of 'CP', either 2D or 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue velocityAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue velocityAt(real const u) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -396,7 +396,7 @@ public:
    *  @return speed at point from curve, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr real_or_issue speedAt(real const u) const noexcept {
+  [[nodiscard]] constexpr real_or_issue speedAt(real const u) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -414,7 +414,7 @@ public:
    *  @return ValidityIssue as std::variant, if any problem with curve
    *  @return vector of {0,0,0}, if cannot normalize tangent (shouldn't be possible)
    */
-  [[nodiscard]] inline constexpr point_or_issue tangentAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue tangentAt(real const u) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -463,7 +463,7 @@ public:
    *  @return one of points (if many) that is the closest one to the point 'p' as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] inline constexpr point_or_issue closestCurvePointFor(Point const p) const noexcept {
+  [[nodiscard]] constexpr point_or_issue closestCurvePointFor(Point const p) const noexcept {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
