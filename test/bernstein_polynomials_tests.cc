@@ -13,12 +13,34 @@ using real = float;
 struct Testing : public curve::bezier::utilities::BernsteinPolynomials<real> {
   using Base = curve::bezier::utilities::BernsteinPolynomials<real>;
 
-  [[nodiscard]] static inline constexpr std::size_t binomial(std::size_t const n, std::size_t const k) noexcept {
-    return Base::binomial(n, k);
+  [[nodiscard]] static inline constexpr std::size_t binomialRecursive(std::size_t const n, std::size_t const k) noexcept {
+    return Base::binomialRecursive(n, k);
+  }
+
+  [[nodiscard]] static inline constexpr std::size_t binomialFallingFactorial(std::size_t const n, std::size_t const k) noexcept {
+    return Base::binomialFallingFactorial(n, k);
+  }
+
+  [[nodiscard]] static inline constexpr std::size_t binomialNaive(std::size_t const n, std::size_t const k) noexcept {
+    return Base::binomialNaive(n, k);
+  }
+
+  [[nodiscard]] static inline constexpr std::size_t binomialInPlace(std::size_t const n, std::size_t const k) noexcept {
+    return Base::binomialInPlace(n, k);
   }
 
   [[nodiscard]] static inline constexpr real toIntegerPower(real x, std::size_t i) noexcept {
     return Base::toIntegerPower(x, i);
+  }
+
+  [[nodiscard]] static constexpr std::size_t factorial(std::size_t const n) noexcept
+  {
+      return Base::factorial(n);
+  }
+
+    [[nodiscard]] static constexpr std::size_t fallingFactorial(std::size_t const n, std::size_t const k) noexcept
+  {
+      return Base::fallingFactorial(n, k);
   }
 };
 
@@ -38,13 +60,39 @@ struct BinomialData {
 
 class BinomialTests : public ::testing::TestWithParam<BinomialData> {};
 
-TEST_P(BinomialTests, binomial_correctResult) {
+TEST_P(BinomialTests, binomialRecursive_correctResult) {
   auto const &params = GetParam();
 
-  std::size_t const result = Testing::binomial(params.n, params.k);
+  std::size_t const result = Testing::binomialRecursive(params.n, params.k);
 
   EXPECT_EQ(result, params.expectedResult);
 }
+
+TEST_P(BinomialTests, binomialFallingFactorial_correctResult) {
+  auto const &params = GetParam();
+
+  std::size_t const result = Testing::binomialFallingFactorial(params.n, params.k);
+
+  EXPECT_EQ(result, params.expectedResult);
+}
+
+TEST_P(BinomialTests, binomialNaive_correctResult) {
+  auto const &params = GetParam();
+
+  std::size_t const result = Testing::binomialNaive(params.n, params.k);
+
+  EXPECT_EQ(result, params.expectedResult);
+}
+
+TEST_P(BinomialTests, binomialInPlace_correctResult) {
+  auto const &params = GetParam();
+
+  std::size_t const result = Testing::binomialInPlace(params.n, params.k);
+
+  EXPECT_EQ(result, params.expectedResult);
+}
+
+
 
 //      1
 //     1 1
@@ -103,6 +151,80 @@ static constexpr IntegerPowerData integerPowerData[]{
 };
 
 INSTANTIATE_TEST_SUITE_P(Fixture, IntegerPowerTests, ::testing::ValuesIn(integerPowerData));
+
+
+struct FactorialData {
+  std::size_t const n;
+
+  std::size_t const expectedResult;
+
+  inline friend std::ostream &operator<<(std::ostream &out, FactorialData const &data) {
+    out << "{";
+    out << data.n << "," << data.expectedResult;
+    out << "}";
+    return out;
+  }
+};
+
+class FactorialTests : public ::testing::TestWithParam<FactorialData> {};
+
+TEST_P(FactorialTests, factorial_correctResult) {
+  auto const &params = GetParam();
+
+  real const result = Testing::factorial(params.n);
+
+  EXPECT_EQ(result, params.expectedResult);
+}
+
+static constexpr FactorialData factorialData[]{
+    {0, 1},
+    {1, 1},
+    {2, 1*2},
+    {3, 1*2*3},
+    {4, 1*2*3*4},
+    {5, 1*2*3*4*5},
+    {6, 1*2*3*4*5*6},
+    {7, 1*2*3*4*5*6*7},
+};
+
+INSTANTIATE_TEST_SUITE_P(Fixture, FactorialTests, ::testing::ValuesIn(factorialData));
+
+struct FallingFactorialData {
+  std::size_t const n;
+  std::size_t const k;
+
+  std::size_t const expectedResult;
+
+  inline friend std::ostream &operator<<(std::ostream &out, FallingFactorialData const &data) {
+    out << "{";
+    out << data.n << "," << data.k << "," << data.expectedResult;
+    out << "}";
+    return out;
+  }
+};
+
+class FallingFactorialTests: public ::testing::TestWithParam<FallingFactorialData> {};
+
+TEST_P(FallingFactorialTests, fallingFactorial_correctResult) {
+  auto const &params = GetParam();
+
+    std::size_t const result = Testing::fallingFactorial( params.n, params.k );
+
+    EXPECT_EQ(result, params.expectedResult);
+}
+
+static constexpr FallingFactorialData fallingFactorialData[]{
+    { 0, 0, 1},
+    { 1, 0, 1}, { 1, 1, 1},
+    { 2, 0, 1}, { 2, 1, 2}, { 2, 2, 2*1},
+    { 3, 0, 1}, { 3, 1, 3}, { 3, 2, 3*2}, { 3, 3, 3*2*1},
+    { 4, 0, 1}, { 4, 1, 4}, { 4, 2, 4*3}, { 4, 3, 4*3*2}, { 4, 4, 4*3*2*1},
+    { 5, 0, 1}, { 5, 1, 5}, { 5, 2, 5*4}, { 5, 3, 5*4*3}, { 5, 4, 5*4*3*2}, { 5, 5, 5*4*3*2*1},
+    { 6, 0, 1}, { 6, 1, 6}, { 6, 2, 6*5}, { 6, 3, 6*5*4}, { 6, 4, 6*5*4*3}, { 6, 5, 6*5*4*3*2}, { 6, 6, 6*5*4*3*2*1},
+};
+
+INSTANTIATE_TEST_SUITE_P(Fixture, FallingFactorialTests, ::testing::ValuesIn(fallingFactorialData));
+
 
 struct BernsteinPolynomialData {
   std::size_t const i;

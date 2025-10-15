@@ -11,6 +11,7 @@
 #define BERNSTEIN_POLYNOMIALS_H
 
 #include <type_traits>
+#include <vector>
 
 namespace curve::bezier::utilities {
 
@@ -38,18 +39,17 @@ public:
 
 protected:
   /**
-   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive
    *
    *  @param n "k objects can be chosen from among n objects", n >= k >= 0
    *  @param k "k objects can be chosen from among n objects", n >= k >= 0
    *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
    *  @return 0 otherwise
    */
-  [[nodiscard]] static inline constexpr std::size_t binomial(std::size_t const n, std::size_t const k) noexcept {
-    auto constexpr bin = [](std::size_t const n, std::size_t k) -> std::size_t {
-      auto constexpr impl = [](auto const &bin, std::size_t const n, std::size_t k) -> std::size_t {
-        // k is left or right side of Pascal's triangle, use only left side
-        k = (k < (n >> 1u)) ? k : (n - k);
+  [[nodiscard]] static constexpr std::size_t binomialRecursive(std::size_t const n, std::size_t const k) noexcept {
+    auto constexpr bin = [](std::size_t const n, std::size_t const k) -> std::size_t {
+      auto constexpr impl = [](auto&&self, std::size_t const n, std::size_t const k) -> std::size_t {
         switch (k) {
         case 0u:
           return 1u;
@@ -58,11 +58,94 @@ protected:
         case 2u:
           return (n * (n - 1u)) >> 1u;
         };
-        return (bin(bin, n - 1u, k - 1u) * n) / k;
+        return (self(self, n - 1u, k - 1u) * n) / k;
       };
       return impl(impl, n, k);
     };
-    return (k > n) ? 0u : bin(n, k);
+    return (k > n) ? 0u : bin(n, std::min(k,n-k));
+  }
+
+  /**
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\begin{cases}\frac{n^{k}}{k!} & \mathrm{if}\:k\leq\frac{n}{2}\\\frac{n^{\left(n-k\right)}}{\left(n-k\right)!} & \mathrm{if}\:k>\frac{n}{2}\end{cases}\f$ or falling factorial
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @return 0 otherwise
+   */
+  [[nodiscard]] static constexpr std::size_t binomialFallingFactorial(std::size_t const n, std::size_t const k) noexcept {
+      auto constexpr impl = [](std::size_t const n, std::size_t const k) -> std::size_t {
+          std::size_t const n2k = fallingFactorial(n, k);
+          std::size_t const kFact = factorial(k);
+
+          return n2k / kFact;
+      };
+
+      return ( k > n ) ? 0u : impl(n, std::min(k, n-k));
+  }
+
+  /**
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as naive
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @return 0 otherwise
+   */
+  [[nodiscard]] static constexpr std::size_t binomialNaive(std::size_t const n, std::size_t k) noexcept {
+      auto constexpr impl = [](std::size_t const n, std::size_t const k) -> std::size_t {
+          std::size_t const nF = factorial( n );
+          std::size_t const nkF = factorial( n - k );
+          std::size_t const kF = factorial( k );
+
+          return (nF / nkF) / kF;
+      };
+
+      return ( k > n ) ? 0u : impl(n, std::min(k, n-k));
+  }
+
+  /**
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ with in place vector
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @return 0 otherwise
+   */
+  [[nodiscard]] static constexpr std::size_t binomialInPlace(std::size_t const n, std::size_t k) noexcept {
+      if( k > n ) {
+          return 0;
+      }
+
+      k = std::min(k,n-k);
+      if( (n == 0) || (k==0)){
+          return 1;
+      }
+      else if ( k==1){
+          return n;
+      }
+      else{
+          std::vector<std::size_t> column(n<<2u,0);
+          std::size_t* prev = column.data();
+          std::size_t* curr = prev + n;
+
+          for( size_t i = 0; i <= n; ++i ){
+              prev[i]=1;
+          }
+
+          for( std::size_t i_k = 1; i_k <= k; ++i_k) {
+              curr[i_k]=1;
+              for( std::size_t j_n = i_k+1; j_n < n; ++j_n ) {
+                  curr[j_n] = curr[j_n - 1] + prev[j_n - 1];
+              }
+
+              std::swap(curr, prev);
+          }
+
+          return curr[n-1] + prev[n-1];
+      }
   }
 
   /**
@@ -72,7 +155,7 @@ protected:
    *  @param i ith integer power
    *  @return x to ith power
    */
-  [[nodiscard]] static inline constexpr real toIntegerPower(real x, std::size_t i) noexcept {
+  [[nodiscard]] static constexpr real toIntegerPower(real x, std::size_t i) noexcept {
     real product = real(1);
     while (i > 0u) {
       if (i & 1u) {
@@ -83,6 +166,49 @@ protected:
     }
     return product;
   }
+
+  /**
+   *  @brief Return factorial n!
+   *
+   *  @param n integer value
+   *  @return Factorial of n
+   */
+   [[nodiscard]] static constexpr std::size_t factorial(std::size_t const n) noexcept {
+       switch(n){
+       case 0:
+       case 1:
+           return 1;
+
+       case 2:
+           return 2;
+
+       default:
+           std::size_t product = 2;
+           for( std::size_t i = 3; i <= n; ++i){
+               product *= i;
+           }
+           return product;
+        }
+    }
+
+  /**
+   *  @brief Return falling factorial \f$n^{\underline{k}}=n\cdot\left(n-1\right)\cdot\ldots\cdot\left(n-\left(k-1\right)\right)\f$
+   *
+   *  @param n integer value, n >= k >= 0
+   *  @param k integer value, n >= k >= 0
+   *  @return falling factorial
+   */
+    [[nodiscard]] static constexpr std::size_t fallingFactorial(std::size_t const n, std::size_t const k) noexcept {
+        if( ( n == 0 ) || ( k == 0 ) ) {
+            return 1;
+        } else {
+            std::size_t prod = (n - k) + 1;
+            for( size_t i = prod +1; i <= n; ++i ){
+                prod *= i;
+            }
+            return prod;
+        }
+    }
 
 public:
   /**
@@ -98,7 +224,7 @@ public:
     if ((i > n) || (n < 0) || (i < 0)) {
       return real(0);
     }
-    real const b = real(binomial(n, i)) * toIntegerPower(u, i) * toIntegerPower(real(1) - u, n - i);
+    real const b = real(binomialRecursive(n, i)) * toIntegerPower(u, i) * toIntegerPower(real(1) - u, n - i);
     return b;
   }
 
