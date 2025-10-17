@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file calculation.cpp This file contains implementation related to calculation of rational bezier
+ *  @file calculation.cpp This file contains implementation related to
+ * calculation of rational bezier
  */
 
 #include "calculation.hpp"

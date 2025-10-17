@@ -19,15 +19,20 @@ namespace curve::points {
 /**
  *  @brief A 2D point to be used with curves
  */
-template <typename type = float>
-requires std::is_floating_point_v<type>
-class Point2 : private PointD<2u, type> {
+template<typename type = float>
+  requires std::is_floating_point_v<type>
+class Point2 : private PointD<2u, type>
+{
 private:
   using Base = PointD<2u, type>;
 
 protected:
   /// @brief Define the dimensions
-  enum class Dimension : std::size_t { X, Y };
+  enum class Dimension : std::size_t
+  {
+    X,
+    Y
+  };
 
 public:
   using real = type;
@@ -37,7 +42,10 @@ public:
   /**
    *  @brief The default constructor. Coordinated are zeroed
    */
-  constexpr Point2() noexcept : Point2(real(0), real(0)) {}
+  constexpr Point2() noexcept
+    : Point2(real(0), real(0))
+  {
+  }
 
   /**
    *  @brief The destructor
@@ -50,7 +58,8 @@ public:
    *  @param x the x coordinates of point
    *  @param y the y coordinates of point
    */
-  constexpr Point2(real const x, real const y) noexcept {
+  constexpr Point2(real const x, real const y) noexcept
+  {
     this->x() = x;
     this->y() = y;
   }
@@ -61,7 +70,8 @@ public:
    *
    *  @return X coordinate for reading
    */
-  [[nodiscard]] constexpr real x() const noexcept {
+  [[nodiscard]] constexpr real x() const noexcept
+  {
     constexpr const std::size_t index = std::size_t(Dimension::X);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -72,7 +82,8 @@ public:
    *
    *  @return reference to X coordinate for writing
    */
-  [[nodiscard]] constexpr real &x() noexcept {
+  [[nodiscard]] constexpr real& x() noexcept
+  {
     constexpr const std::size_t index = std::size_t(Dimension::X);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -83,7 +94,8 @@ public:
    *
    *  @return Y coordinate for reading
    */
-  [[nodiscard]] constexpr real y() const noexcept {
+  [[nodiscard]] constexpr real y() const noexcept
+  {
     constexpr const std::size_t index = std::size_t(Dimension::Y);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -94,7 +106,8 @@ public:
    *
    *  @return reference to Y coordinate for writing
    */
-  [[nodiscard]] constexpr real &y() noexcept {
+  [[nodiscard]] constexpr real& y() noexcept
+  {
     constexpr const std::size_t index = std::size_t(Dimension::Y);
     static_assert(index < this->getOrder());
     return this->coords_[index];
@@ -106,7 +119,8 @@ public:
    *  @param scale multiplication factor
    *  @return new point that is multiplied
    */
-  constexpr Point operator*(real const scale) const noexcept {
+  constexpr Point operator*(real const scale) const noexcept
+  {
     return Point(scale * this->x(), scale * this->y());
   }
 
@@ -116,7 +130,10 @@ public:
    *  @param p another point
    *  @return Dot product of two points
    */
-  constexpr real operator*(Point const p) const noexcept { return this->x() * p.x() + this->y() * p.y(); }
+  constexpr real operator*(Point const p) const noexcept
+  {
+    return this->x() * p.x() + this->y() * p.y();
+  }
 
   /**
    *  @brief Divide coodinate vales of point by 'div'
@@ -125,9 +142,12 @@ public:
    *  @return the divided point as std::optional
    *  @return std::nullopt, if divided by zero or near zero
    */
-  [[nodiscard]] constexpr std::optional<Point> operator/(real const div) const noexcept {
+  [[nodiscard]] constexpr std::optional<Point> operator/(
+    real const div) const noexcept
+  {
     bool const state = std::abs(div) < std::numeric_limits<real>::epsilon();
-    return state ? std::nullopt : std::make_optional(Point(this->x() / div, this->y() / div));
+    return state ? std::nullopt
+                 : std::make_optional(Point(this->x() / div, this->y() / div));
   }
 
   /**
@@ -136,7 +156,8 @@ public:
    *  @param p point to be subracted from 'this'
    *  @return a new point containing the substraction
    */
-  [[nodiscard]] constexpr Point operator-(Point const p) const noexcept {
+  [[nodiscard]] constexpr Point operator-(Point const p) const noexcept
+  {
     return Point(this->x() - p.x(), this->y() - p.y());
   }
 
@@ -146,7 +167,8 @@ public:
    *  @param p point to be added to 'this'
    *  @return a new point containing the addition
    */
-  [[nodiscard]] constexpr Point operator+(Point const p) const noexcept {
+  [[nodiscard]] constexpr Point operator+(Point const p) const noexcept
+  {
     return Point(this->x() + p.x(), this->y() + p.y());
   }
 
@@ -156,26 +178,31 @@ public:
    *  @param p point to be added to 'this'
    *  @return 'this' point
    */
-  constexpr Point &operator+=(Point const p) noexcept {
+  constexpr Point& operator+=(Point const p) noexcept
+  {
     this->x() += p.x();
     this->y() += p.y();
     return *this;
   }
 
   /**
-   *  @brief Calculate trace of point or sum of coordinate values. This is different than 1-norm:
-   * \f$\stackrel[i=1]{n}{\sum}\left|x(){i}\right|\f$
+   *  @brief Calculate trace of point or sum of coordinate values. This is
+   * different than 1-norm: \f$\stackrel[i=1]{n}{\sum}\left|x(){i}\right|\f$
    *
    *  @return sum of coordinates
    */
-  [[nodiscard]] constexpr real trace() const noexcept { return this->x() + this->y(); }
+  [[nodiscard]] constexpr real trace() const noexcept
+  {
+    return this->x() + this->y();
+  }
 
   /**
    *  @brief Calculate squared length of point as vector
    *
    *  @return squared length
    */
-  [[nodiscard]] constexpr real lengthSquared() const noexcept {
+  [[nodiscard]] constexpr real lengthSquared() const noexcept
+  {
     return this->x() * this->x() + this->y() * this->y();
   }
 
@@ -184,7 +211,10 @@ public:
    *
    *  @return length
    */
-  [[nodiscard]] constexpr real length() const noexcept { return std::sqrt(this->lengthSquared()); }
+  [[nodiscard]] constexpr real length() const noexcept
+  {
+    return std::sqrt(this->lengthSquared());
+  }
 
   /**
    *  @brief Calculate distance between this point and point 'p'
@@ -192,7 +222,8 @@ public:
    *  @param p the point calcualte distance to
    *  @return distance between points
    */
-  [[nodiscard]] constexpr real distance(Point const p) const noexcept {
+  [[nodiscard]] constexpr real distance(Point const p) const noexcept
+  {
     Point const difference = *this - p;
     return difference.length();
   }
@@ -203,14 +234,20 @@ public:
    *  @return a point, which length is one as std::optional
    *  @return std::nullopt, if length of point is zero or near zero
    */
-  [[nodiscard]] constexpr std::optional<Point> normalize() const noexcept { return *this / this->length(); }
+  [[nodiscard]] constexpr std::optional<Point> normalize() const noexcept
+  {
+    return *this / this->length();
+  }
 
   /**
    *  @brief Return order or number of coordinate values point have
    *
    *  @return DIM
    */
-  [[nodiscard]] static inline consteval std::size_t getOrder() noexcept { return Base::dim; }
+  [[nodiscard]] static inline consteval std::size_t getOrder() noexcept
+  {
+    return Base::dim;
+  }
 
   /**
    *  @brief Stream point 'data' to output stream 'out'
@@ -219,7 +256,8 @@ public:
    *  @param data the point to be streamed
    *  @return the 'out' stream
    */
-  inline friend std::ostream &operator<<(std::ostream &out, Point const &data) {
+  inline friend std::ostream& operator<<(std::ostream& out, Point const& data)
+  {
     out << "{";
     out << data.x() << "," << data.y();
     out << "}";
@@ -230,10 +268,13 @@ public:
    *  @brief Stream optional point 'data' to output stream 'out'
    *
    *  @param out the output stream
-   *  @param data the point to be streamed, or if std::nullopt, string "'no value'"
+   *  @param data the point to be streamed, or if std::nullopt, string "'no
+   * value'"
    *  @return the 'out' stream
    */
-  inline friend std::ostream &operator<<(std::ostream &out, std::optional<Point> const &data) {
+  inline friend std::ostream& operator<<(std::ostream& out,
+                                         std::optional<Point> const& data)
+  {
     if (data.has_value()) {
       out << data.value();
     } else {

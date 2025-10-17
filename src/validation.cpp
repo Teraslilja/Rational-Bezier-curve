@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file validation.cpp This file contains implementation related to validation of rational bezier
+ *  @file validation.cpp This file contains implementation related to validation
+ * of rational bezier
  */
 
 #include "validation.hpp"

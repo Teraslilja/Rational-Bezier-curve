@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file newton_raphson.cpp This file contains implementation related to Newton-Raphson algorithm
+ *  @file newton_raphson.cpp This file contains implementation related to
+ * Newton-Raphson algorithm
  */
 
 #include "newton_raphson.hpp"

@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file calculation_interface.cpp This file contains implementation related to calculation interface
+ *  @file calculation_interface.cpp This file contains implementation related to
+ * calculation interface
  */
 
 #include "calculation_interface.hpp"

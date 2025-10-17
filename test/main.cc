@@ -4,7 +4,9 @@
 
 #include <gtest/gtest.h>
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char* argv[])
+{
   ::testing::InitGoogleTest(&argc, argv);
   int const status = RUN_ALL_TESTS();
   if (status != 0) {

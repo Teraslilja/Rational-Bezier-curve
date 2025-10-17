@@ -20,9 +20,10 @@ namespace internal {
 /**
  *   @brief Interface to access X coordinate value
  */
-template <typename real>
-requires std::is_floating_point_v<real>
-struct RequireXaccessInterface {
+template<typename real>
+  requires std::is_floating_point_v<real>
+struct RequireXaccessInterface
+{
   /**
    *  @brief Return value of X coordinate
    *
@@ -35,15 +36,16 @@ struct RequireXaccessInterface {
    *
    *  @return reference to X coordinate for writing
    */
-  [[nodiscard]] constexpr real &x() noexcept;
+  [[nodiscard]] constexpr real& x() noexcept;
 };
 
 /**
  *   @brief Interface to access Y coordinate value
  */
-template <typename real>
-requires std::is_floating_point_v<real>
-struct RequireYaccessInterface {
+template<typename real>
+  requires std::is_floating_point_v<real>
+struct RequireYaccessInterface
+{
   /**
    *  @brief Return value of Y coordinate
    *
@@ -56,15 +58,16 @@ struct RequireYaccessInterface {
    *
    *  @return reference to Y coordinate for writing
    */
-  [[nodiscard]] constexpr real &y() noexcept;
+  [[nodiscard]] constexpr real& y() noexcept;
 };
 
 /**
  *   @brief Interface to access Z coordinate value
  */
-template <typename real>
-requires std::is_floating_point_v<real>
-struct RequireZaccessInterface {
+template<typename real>
+  requires std::is_floating_point_v<real>
+struct RequireZaccessInterface
+{
   /**
    *  @brief Return value of Z coordinate
    *
@@ -77,12 +80,16 @@ struct RequireZaccessInterface {
    *
    *  @return reference to Z coordinate for writing
    */
-  [[nodiscard]] constexpr real &z() noexcept;
+  [[nodiscard]] constexpr real& z() noexcept;
 };
 
-template <class T> struct NotRequired {};
+template<class T>
+struct NotRequired
+{};
 
-template <bool b, class T> using AddInterfaceIf = typename std::conditional<b, T, internal::NotRequired<T>>::type;
+template<bool b, class T>
+using AddInterfaceIf =
+  typename std::conditional<b, T, internal::NotRequired<T>>::type;
 } // namespace internal
 
 /**
@@ -91,11 +98,14 @@ template <bool b, class T> using AddInterfaceIf = typename std::conditional<b, T
  * \See internal::RequireYaccessInterface
  * \See internal::RequireZaccessInterface
  */
-template <std::size_t DIM, typename type = float>
-requires std::is_floating_point_v<type> &&((DIM == 2u) || (DIM == 3u)) /**/
-    class PointD : public internal::AddInterfaceIf<DIM >= 1u, internal::RequireXaccessInterface<type>>,
-                   internal::AddInterfaceIf<DIM >= 2u, internal::RequireYaccessInterface<type>>,
-                   internal::AddInterfaceIf<DIM >= 3u, internal::RequireZaccessInterface<type>> {
+template<std::size_t DIM, typename type = float>
+  requires std::is_floating_point_v<type> && ((DIM == 2u) || (DIM == 3u)) /**/
+class PointD
+  : public internal::AddInterfaceIf<DIM >= 1u,
+                                    internal::RequireXaccessInterface<type>>
+  , internal::AddInterfaceIf<DIM >= 2u, internal::RequireYaccessInterface<type>>
+  , internal::AddInterfaceIf<DIM >= 3u, internal::RequireZaccessInterface<type>>
+{
 protected:
   static constexpr std::size_t const dim = DIM;
   /// Define the dimension
@@ -141,7 +151,8 @@ public:
    *  @return the divided point as std::optional
    *  @return std::nullopt, if divided by zero or near zero
    */
-  [[nodiscard]] constexpr std::optional<PointD> operator/(real const div) const noexcept;
+  [[nodiscard]] constexpr std::optional<PointD> operator/(
+    real const div) const noexcept;
 
   /**
    *  @brief Calculate substraction between this and another point 'p'
@@ -165,11 +176,11 @@ public:
    *  @param p point to be added to 'this'
    *  @return 'this' point
    */
-  constexpr PointD &operator+=(PointD const p) noexcept;
+  constexpr PointD& operator+=(PointD const p) noexcept;
 
   /**
-   *  @brief Calculate trace of point or sum of coordinate values. This is different than 1-norm:
-   * \f$\stackrel[i=1]{n}{\sum}\left|x_{i}\right|\f$
+   *  @brief Calculate trace of point or sum of coordinate values. This is
+   * different than 1-norm: \f$\stackrel[i=1]{n}{\sum}\left|x_{i}\right|\f$
    *
    *  @return sum of coordinates
    */

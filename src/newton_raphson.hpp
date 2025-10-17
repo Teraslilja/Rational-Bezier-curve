@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file newton_raphson.hpp This file contains module interface for Newton-Raphson algorithm
+ *  @file newton_raphson.hpp This file contains module interface for
+ * Newton-Raphson algorithm
  */
 
 #ifndef NEWTON_RAPHSON_H
@@ -20,9 +21,10 @@ namespace curve::bezier::utilities {
 /**
  *  @brief A structure to find root of function f(x) with help of f'(x)
  */
-template <typename type = float>
-requires std::is_floating_point_v<type>
-struct NewtonRaphson {
+template<typename type = float>
+  requires std::is_floating_point_v<type>
+struct NewtonRaphson
+{
 public:
   using real = type;
 
@@ -39,14 +41,19 @@ public:
    *  @param df function or lambda function to calculate f'(x)
    *  @return std::nullopt, if cannot calculate f'(x)
    *  @return std::nullopt, if cannot calculate f(x)
-   *  @return std::nullopt, new x_(i+1) do not belong range [ lowerBound ; upperBound ]
+   *  @return std::nullopt, new x_(i+1) do not belong range [ lowerBound ;
+   * upperBound ]
    *  @return x, if |f'(x)| < DF_ZERO_EPS
    *  @return x otherwise as indication for f(x)=0
    */
-  [[nodiscard]] static constexpr std::optional<real>
-  findRoot(real const lowerBound, real x, real const upperBound, std::size_t const roundLimit,
-           std::function<std::optional<real>(real const)> const f,
-           std::function<std::optional<real>(real const)> const df) {
+  [[nodiscard]] static constexpr std::optional<real> findRoot(
+    real const lowerBound,
+    real x,
+    real const upperBound,
+    std::size_t const roundLimit,
+    std::function<std::optional<real>(real const)> const f,
+    std::function<std::optional<real>(real const)> const df)
+  {
     real constexpr DF_ZERO_EPS = real(1e-5);
     real constexpr DX_ZERO_EPS = real(1e-6);
 

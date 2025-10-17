@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file control_point.cpp This file contains implementation related to control point
+ *  @file control_point.cpp This file contains implementation related to control
+ * point
  */
 
 #include "control_point.hpp"

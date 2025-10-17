@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file validation.hpp This file contains module interface for validation of rational bezier
+ *  @file validation.hpp This file contains module interface for validation of
+ * rational bezier
  */
 
 #ifndef VALIDATION_H
@@ -15,12 +16,15 @@
 namespace curve::bezier::rational {
 
 /**
- *  @brief The class to validate rational bezier curves with control point of type 'CP', using either Point2<> or
- * Point3<> and if curve is valid, calculate points from it.
+ *  @brief The class to validate rational bezier curves with control point of
+ * type 'CP', using either Point2<> or Point3<> and if curve is valid, calculate
+ * points from it.
  */
-template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
-class ValidateRational : private curve::bezier::rational::ValidationInterface<CP> {
+template<class CP>
+  requires std::is_same_v<CP, ControlPoint<typename CP::Point>>
+class ValidateRational
+  : private curve::bezier::rational::ValidationInterface<CP>
+{
 private:
   using Interface = curve::bezier::rational::ValidationInterface<CP>;
   using Calculator = curve::bezier::rational::CalculateRational<CP>;
@@ -34,15 +38,20 @@ public:
 
   using point_or_issue = typename Interface::point_or_issue;
   using real_or_issue = typename Interface::real_or_issue;
-  using vector_of_points_or_issue = typename Interface::vector_of_points_or_issue;
+  using vector_of_points_or_issue =
+    typename Interface::vector_of_points_or_issue;
 
   /**
-   *  @brief Move constructor for object to validate and calculate rational bezier curve from given control points
+   *  @brief Move constructor for object to validate and calculate rational
+   * bezier curve from given control points
    *
-   *  @param controlPoints read-only span from actual container of control points
+   *  @param controlPoints read-only span from actual container of control
+   * points
    */
-  constexpr ValidateRational(ControlPointSpan const &&controlPoints) noexcept
-      : calculator(std::move(controlPoints)) {}
+  constexpr ValidateRational(ControlPointSpan const&& controlPoints) noexcept
+    : calculator(std::move(controlPoints))
+  {
+  }
 
   /**
    *  @brief A default destructor
@@ -57,10 +66,12 @@ private:
    *  @return std::nullopt, if parameter 'u' is valid
    *  @return ValidityIssue::ISSUE_U_IS_INVALID as std::optional otherwise
    */
-  [[nodiscard]] static constexpr std::optional<ValidityIssue> isValidU(real const u) noexcept {
+  [[nodiscard]] static constexpr std::optional<ValidityIssue> isValidU(
+    real const u) noexcept
+  {
     return ((u >= Calculator::U_MIN) && (u <= Calculator::U_MAX))
-               ? std::nullopt
-               : std::make_optional(ValidityIssue::ISSUE_U_IS_INVALID);
+             ? std::nullopt
+             : std::make_optional(ValidityIssue::ISSUE_U_IS_INVALID);
   }
 
   /**
@@ -68,13 +79,16 @@ private:
    *
    *  @param count Wanted minimum amount of control points
    *  @return std::nullopt, if enough control points
-   *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional otherwise
+   *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue>
-  hasEnoughControlPoints(std::size_t const count) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasEnoughControlPoints(
+    std::size_t const count) const noexcept
+  {
     return (this->calculator.numberOfControlPoints() >= count)
-               ? std::nullopt
-               : std::make_optional(ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS);
+             ? std::nullopt
+             : std::make_optional(
+                 ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS);
   }
 
   /**
@@ -84,7 +98,9 @@ private:
    *  @return true, if weight is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static constexpr bool isWeightOfControlPointValid(ControlPoint const &cp) noexcept {
+  [[nodiscard]] static constexpr bool isWeightOfControlPointValid(
+    ControlPoint const& cp) noexcept
+  {
     return std::isfinite(cp.w());
   }
 
@@ -92,11 +108,14 @@ private:
    *   @brief Are weights of control points valid
    *
    *  @return std::nullopt, if weights are valid
-   *  @return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT as std::optional otherwise
+   *  @return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> hasWeightsOfControlPointsValid() const noexcept {
-    ControlPointSpan const &cps = this->calculator.getSpan();
-    for (auto const &cp : cps) {
+  [[nodiscard]] constexpr std::optional<ValidityIssue>
+  hasWeightsOfControlPointsValid() const noexcept
+  {
+    ControlPointSpan const& cps = this->calculator.getSpan();
+    for (auto const& cp : cps) {
       bool const valid = isWeightOfControlPointValid(cp);
       if (!valid) {
         return ValidityIssue::ISSUE_BAD_CONTROLPOINT_WEIGHT;
@@ -111,7 +130,9 @@ private:
    *  @return true, if coordinate value is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static constexpr bool isValidCoordinateValueOfPoint(real const v) noexcept {
+  [[nodiscard]] static constexpr bool isValidCoordinateValueOfPoint(
+    real const v) noexcept
+  {
     return std::isfinite(v);
   }
 
@@ -122,8 +143,10 @@ private:
    *  @return true, if point is valid
    *  @return false otherwise
    */
-  [[nodiscard]] static constexpr bool isValidPointOfControlPoint(ControlPoint const &cp) noexcept {
-    Point const &p = cp.p();
+  [[nodiscard]] static constexpr bool isValidPointOfControlPoint(
+    ControlPoint const& cp) noexcept
+  {
+    Point const& p = cp.p();
     bool isValid = (p.getOrder() > 0u);
     if constexpr (p.getOrder() >= 1u) {
       isValid = isValid && isValidCoordinateValueOfPoint(p.x());
@@ -142,9 +165,11 @@ private:
    *  @return std::nullopt, if points are valid
    *  @return ValidityIssue::ISSUE_BAD_POINT as std::optional otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidPoints() const noexcept {
-    ControlPointSpan const &cps = this->calculator.getSpan();
-    for (auto const &cp : cps) {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidPoints()
+    const noexcept
+  {
+    ControlPointSpan const& cps = this->calculator.getSpan();
+    for (auto const& cp : cps) {
       bool const isValid = isValidPointOfControlPoint(cp);
       if (!isValid) {
         return ValidityIssue::ISSUE_BAD_POINT;
@@ -154,19 +179,26 @@ private:
   }
 
   /**
-   *  @brief Check, if sum of curve's weights of control points isn't too close to zero
+   *  @brief Check, if sum of curve's weights of control points isn't too close
+   * to zero
    *
    *  @param u curve parameter, valid range is [0;1]
-   *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
-   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
+   *  @return std::nullopt, if sum of weights differs from zero more than
+   * real::epsilon
+   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidSumOfWeights(real const u) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> hasValidSumOfWeights(
+    real const u) const noexcept
+  {
     real const sum_w = [u, this]() -> real {
-      ControlPointSpan const &cps = this->calculator.getSpan();
+      ControlPointSpan const& cps = this->calculator.getSpan();
       std::size_t const n = cps.size() - 1u;
       real sum_w = real(0);
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) *
+          cp.w();
         sum_w += w;
 
         ++i;
@@ -175,18 +207,23 @@ private:
     }();
 
     return (std::abs(sum_w) >= std::numeric_limits<real>::epsilon())
-               ? std::nullopt
-               : std::make_optional(ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS);
+             ? std::nullopt
+             : std::make_optional(
+                 ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS);
   }
 
   /**
-   *  @brief Check, if curve's control point configuration is valid (enough control points and okay weights)
+   *  @brief Check, if curve's control point configuration is valid (enough
+   * control points and okay weights)
    *
    *  @param count Wanted minimum amount of control points
    *  @return std::nullopt, if enough control points
-   *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional otherwise
+   *  @return ValidityIssue::ISSUE_NOT_ENOUGHT_CONTROL_POINTS as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(
+    std::size_t const count) const noexcept
+  {
     std::optional<ValidityIssue> issue;
 
     issue = this->hasEnoughControlPoints(count);
@@ -208,16 +245,21 @@ private:
   }
 
   /**
-   *  @brief Check, if curve's control point configuration is valid (enough control points and okay weights) and
-   * selecting a valid point (parameter u) from curve
+   *  @brief Check, if curve's control point configuration is valid (enough
+   * control points and okay weights) and selecting a valid point (parameter u)
+   * from curve
    *
    *  @param count Wanted minimum amount of control points
    *  @param u curve parameter, valid range is [0;1]
-   *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
-   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
+   *  @return std::nullopt, if sum of weights differs from zero more than
+   * real::epsilon
+   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
-                                                                      real const u) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(
+    std::size_t const count,
+    real const u) const noexcept
+  {
     std::optional<ValidityIssue> issue;
     issue = this->hasEnoughControlPoints(count);
     if (issue.has_value()) {
@@ -243,16 +285,21 @@ private:
   }
 
   /**
-   *  @brief Check, if curve's control point configuration is valid (enough control points and okay weights) and
-   * selecting a valid point (parameter u) from curve
+   *  @brief Check, if curve's control point configuration is valid (enough
+   * control points and okay weights) and selecting a valid point (parameter u)
+   * from curve
    *
    *  @param count Wanted minimum amount of control points
    *  @param us curve parameters, valid range is [0;1]
-   *  @return std::nullopt, if sum of weights differs from zero more than real::epsilon
-   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional otherwise
+   *  @return std::nullopt, if sum of weights differs from zero more than
+   * real::epsilon
+   *  @return ValidityIssue::ISSUE_BAD_COMBINATION_OF_WEIGHTS as std::optional
+   * otherwise
    */
-  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(std::size_t const count,
-                                                                      std::span<real> const us) const noexcept {
+  [[nodiscard]] constexpr std::optional<ValidityIssue> isValid(
+    std::size_t const count,
+    std::span<real> const us) const noexcept
+  {
     std::optional<ValidityIssue> issue;
     issue = this->hasEnoughControlPoints(count);
     if (issue.has_value()) {
@@ -289,10 +336,12 @@ public:
    *  @brief Calculate the point from the curve at point 'u'
    *
    *  @param u a position from curve, range [0;1]
-   *  @return a point from curve, depending type of 'CP', either 2D or 3D, as std::variant
+   *  @return a point from curve, depending type of 'CP', either 2D or 3D, as
+   * std::variant
    *  @return Issue ID as std::variant, if curve is invalid
    */
-  [[nodiscard]] constexpr point_or_issue pointAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue pointAt(real const u) const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(1u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -306,9 +355,12 @@ public:
    *
    *  @param us a span of positions from curve, all within range [0;1]
    *  @return vector of newly calculated vertives (as std::variant> or
-   *  @return Issue number (as std::variant), if curve is invalid or problems with memory (re)allocation
+   *  @return Issue number (as std::variant), if curve is invalid or problems
+   * with memory (re)allocation
    */
-  [[nodiscard]] constexpr vector_of_points_or_issue pointsAt(std::span<real> const us) const {
+  [[nodiscard]] constexpr vector_of_points_or_issue pointsAt(
+    std::span<real> const us) const
+  {
     std::optional<ValidityIssue> const issue = this->isValid(1u, us);
     if (issue.has_value()) {
       return issue.value();
@@ -319,7 +371,7 @@ public:
       points.reserve(us.size()); // Might throw
     }
 
-    catch (std::exception const &) {
+    catch (std::exception const&) {
       return ValidityIssue::ISSUE_OUT_OF_HEAP_MEMORY;
     }
 
@@ -336,7 +388,8 @@ public:
    *  @return the length of curve as std::variant
    *  @return Issue numner, if curve is invalid
    */
-  [[nodiscard]] constexpr real_or_issue curveLength() const noexcept {
+  [[nodiscard]] constexpr real_or_issue curveLength() const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
@@ -354,10 +407,13 @@ public:
    *  @brief Generate an approximation of curve as a line string
    *
    *  @return a vector containing vertices between line segments as std::variant
-   *  @return a vector containning a single vertex, if curve has only one control point as std::variant
+   *  @return a vector containning a single vertex, if curve has only one
+   * control point as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] constexpr vector_of_points_or_issue asLineString() const noexcept {
+  [[nodiscard]] constexpr vector_of_points_or_issue asLineString()
+    const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();
@@ -365,7 +421,8 @@ public:
 
     if (this->calculator.numberOfControlPoints() < 2u) {
       // point as a degenerate curve
-      std::vector<Point> single_point(1u, this->calculator.getSpan().front().p());
+      std::vector<Point> single_point(1u,
+                                      this->calculator.getSpan().front().p());
       return single_point;
     } else {
       std::vector<Point> lineSegments = this->calculator.asLinestring();
@@ -377,10 +434,12 @@ public:
    *  @brief Calculate velocity from curve at point 'u'
    *
    *  @param u a position from curve, range [0;1]
-   *  @return velocity at point from curve, depending type of 'CP', either 2D or 3D, as std::variant
+   *  @return velocity at point from curve, depending type of 'CP', either 2D or
+   * 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] constexpr point_or_issue velocityAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue velocityAt(real const u) const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -396,7 +455,8 @@ public:
    *  @return speed at point from curve, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] constexpr real_or_issue speedAt(real const u) const noexcept {
+  [[nodiscard]] constexpr real_or_issue speedAt(real const u) const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -410,11 +470,14 @@ public:
    *  @brief Calculate unit length tangent from curve at point 'u'
    *
    *  @param u a position from curve, range [0;1]
-   *  @return tangent (unit length) at point from curve, depending type of 'CP', either 2D or 3D, as std::variant
+   *  @return tangent (unit length) at point from curve, depending type of 'CP',
+   * either 2D or 3D, as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
-   *  @return vector of {0,0,0}, if cannot normalize tangent (shouldn't be possible)
+   *  @return vector of {0,0,0}, if cannot normalize tangent (shouldn't be
+   * possible)
    */
-  [[nodiscard]] constexpr point_or_issue tangentAt(real const u) const noexcept {
+  [[nodiscard]] constexpr point_or_issue tangentAt(real const u) const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(2u, u);
     if (issue.has_value()) {
       return issue.value();
@@ -430,40 +493,52 @@ public:
   }
 
   /**
-   *  This problem is actually quite challenging than usual find global minimum of function. Normally the minimum of
-   * function D_p(u) is located at either: a) D_p'(u) = 0 b) ends of search range, u = {0,1} c) discontinuation
+   *  This problem is actually quite challenging than usual find global minimum
+   * of function. Normally the minimum of function D_p(u) is located at either:
+   * a) D_p'(u) = 0 b) ends of search range, u = {0,1} c) discontinuation
    * locations of D_p(u), if such exists
    *
-   *  How ever, now D_p(u) is expected to have multiple local minimums (think curve like snake) and in an extreme
-   * case D_p(u) can be constant (think curve like arc of circle, where p is origo of that circle).
-   *  =-> D_p'(u) = D_p"(u) = 0 or no global minimum exists as a single point at curve.
+   *  How ever, now D_p(u) is expected to have multiple local minimums (think
+   * curve like snake) and in an extreme case D_p(u) can be constant (think
+   * curve like arc of circle, where p is origo of that circle).
+   *  =-> D_p'(u) = D_p"(u) = 0 or no global minimum exists as a single point at
+   * curve.
    *
    *  See e.g. of research related to the topic
-   *  Xiao-Diao Chen, Yin Zhou, Zhenyu Shu, Hua Su, Jean-Claude Paul. Improved Algebraic Algorithm On Point
-   * Projection For Bézier Curves. Proceedings of the Second International Multi-Symposiums on Computer and
-   * Computational Sciences (IMSCCS 2007), The University of Iowa, Iowa City, Iowa, USA, Aug 2007, Iowa, United
-   * States. pp.158-163, 10.1109/IMSCCS.2007.17. inria-00518379
+   *  Xiao-Diao Chen, Yin Zhou, Zhenyu Shu, Hua Su, Jean-Claude Paul. Improved
+   * Algebraic Algorithm On Point Projection For Bézier Curves. Proceedings of
+   * the Second International Multi-Symposiums on Computer and Computational
+   * Sciences (IMSCCS 2007), The University of Iowa, Iowa City, Iowa, USA, Aug
+   * 2007, Iowa, United States. pp.158-163, 10.1109/IMSCCS.2007.17.
+   * inria-00518379
    *
    *  https://pomax.github.io/bezierinfo/#projections
    *  https://pomax.github.io/bezierinfo/#extremities
    *
    *  NOTE!:
-   *  The current implementation use Newton-Raphson method to find locations, where derivate of distance (squared)
-   * between given point and curve is zero or df(u)/du = 0.
+   *  The current implementation use Newton-Raphson method to find locations,
+   * where derivate of distance (squared) between given point and curve is zero
+   * or df(u)/du = 0.
    *
-   *  @brief Find any point (potentially of many), which is closest to given point 'p'. First generates a rought
-   * approximation of curve as line string with 2N-1 vertices. Then use these 2N-1 vertices as initial guesses for
-   * Newton-Raphson method to find locations, where either the function reaches zero f(x) = 0 or the derivate f'(x)
-   * goes to (near) zero. Finally selects the point with the smallest distance to 'p', if any. For function f(x) is
-   * used a derivate of distance squared between curve and point 'p'. For function f'(x) is used an approximation of
-   * 2nd derivative of distace squared between curve and point 'p'. See e.g.
+   *  @brief Find any point (potentially of many), which is closest to given
+   * point 'p'. First generates a rought approximation of curve as line string
+   * with 2N-1 vertices. Then use these 2N-1 vertices as initial guesses for
+   * Newton-Raphson method to find locations, where either the function reaches
+   * zero f(x) = 0 or the derivate f'(x) goes to (near) zero. Finally selects
+   * the point with the smallest distance to 'p', if any. For function f(x) is
+   * used a derivate of distance squared between curve and point 'p'. For
+   * function f'(x) is used an approximation of 2nd derivative of distace
+   * squared between curve and point 'p'. See e.g.
    * https://math.hmc.edu/calculus/hmc-mathematics-calculus-online-tutorials/single-variable-calculus/limit-definition-of-the-derivative/
    *
    *  @param p The point near (or on) curve
-   *  @return one of points (if many) that is the closest one to the point 'p' as std::variant
+   *  @return one of points (if many) that is the closest one to the point 'p'
+   * as std::variant
    *  @return ValidityIssue as std::variant, if any problem with curve
    */
-  [[nodiscard]] constexpr point_or_issue closestCurvePointFor(Point const p) const noexcept {
+  [[nodiscard]] constexpr point_or_issue closestCurvePointFor(
+    Point const p) const noexcept
+  {
     std::optional<ValidityIssue> const issue = this->isValid(1u);
     if (issue.has_value()) {
       return issue.value();

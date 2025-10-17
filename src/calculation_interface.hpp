@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file calculation_interface.hpp This file contains module interface for calculation interface
+ *  @file calculation_interface.hpp This file contains module interface for
+ * calculation interface
  */
 
 #ifndef CALCULATION_INTERFACE_H
@@ -18,9 +19,12 @@ namespace curve::bezier::rational {
 /**
  *  @brief Define the calculation interface
  */
-template <class CP>
-requires std::is_same_v<CP, curve::bezier::rational::ControlPoint<typename CP::Point, typename CP::real>>
-struct CalculationInterface {
+template<class CP>
+  requires std::is_same_v<CP,
+                          curve::bezier::rational::
+                            ControlPoint<typename CP::Point, typename CP::real>>
+struct CalculationInterface
+{
   using ControlPoint = CP;
   using Point = typename ControlPoint::Point;
   using real = typename Point::real;
@@ -39,11 +43,12 @@ struct CalculationInterface {
 
   /// @brief The methods of calculation interface @{
   [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept;
-  [[nodiscard]] constexpr ControlPointSpan const &getSpan() const noexcept;
+  [[nodiscard]] constexpr ControlPointSpan const& getSpan() const noexcept;
 
   [[nodiscard]] constexpr Point C(real const u) const noexcept;
   [[nodiscard]] constexpr Point dC(real const u) const noexcept;
-  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints, real const u) noexcept;
+  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints,
+                                    real const u) noexcept;
 
   [[nodiscard]] constexpr real curveLength() const noexcept;
 

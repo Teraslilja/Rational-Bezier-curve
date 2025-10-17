@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file rational_bezier.cpp This file contains implementation related to rational bezier
+ *  @file rational_bezier.cpp This file contains implementation related to
+ * rational bezier
  */
 
 #include "rational_bezier.hpp"

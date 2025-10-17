@@ -3,8 +3,8 @@
 //
 
 /**
- *  @file bernstein_polynomials.cpp This file contains implementation related to calculate Bernstein's polynomial
- * factors
+ *  @file bernstein_polynomials.cpp This file contains implementation related to
+ * calculate Bernstein's polynomial factors
  */
 
 #include "bernstein_polynomials.hpp"

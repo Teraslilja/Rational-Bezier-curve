@@ -3,7 +3,8 @@
 //
 
 /**
- *  @file calculation.hpp This file contains module interface for calculation rational bezier
+ *  @file calculation.hpp This file contains module interface for calculation
+ * rational bezier
  */
 
 #ifndef CALCULATION_H
@@ -13,8 +14,8 @@
 #include "calculation_interface.hpp"
 #include "newton_raphson.hpp"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 namespace curve::bezier::rational {
 
@@ -23,10 +24,12 @@ namespace internal {
 /**
  *  @brief Store a pair of location at curve and a point
  */
-template <class P, typename type = typename P::real>
-requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
-         std::is_same_v<P, curve::points::Point3<typename P::real>>) &&
-    std::is_floating_point_v<type> struct PointAtCurve {
+template<class P, typename type = typename P::real>
+  requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
+           std::is_same_v<P, curve::points::Point3<typename P::real>>) &&
+          std::is_floating_point_v<type>
+struct PointAtCurve
+{
   using Point = P;
   using real = typename Point::real;
 
@@ -36,14 +39,18 @@ requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
   /**
    *  @brief Constructor
    */
-  constexpr PointAtCurve(real const u, Point const point) noexcept : u_{u}, point_{point} {};
+  constexpr PointAtCurve(real const u, Point const point) noexcept
+    : u_{ u }
+    , point_{ point } {};
 
   /**
    *  @brief Destructor
    */
   constexpr ~PointAtCurve() noexcept = default;
 
-  inline friend std::ostream &operator<<(std::ostream &out, PointAtCurve const data) {
+  inline friend std::ostream& operator<<(std::ostream& out,
+                                         PointAtCurve const data)
+  {
     out << "{";
     out << data.u_ << ", " << data.point_;
     out << "}";
@@ -55,12 +62,14 @@ requires(std::is_same_v<P, curve::points::Point2<typename P::real>> ||
 /**
  *  @brief Store a pair of squared distance and location at curve
  */
-template <typename type = float>
-requires std::is_floating_point_v<type>
-struct DistanceFromLocation {
+template<typename type = float>
+  requires std::is_floating_point_v<type>
+struct DistanceFromLocation
+{
   using real = type;
 
-  struct Pair {
+  struct Pair
+  {
     real u_;               //< Location at curve
     real distanceSquared_; //< Squared distance from the curve at location u
   };
@@ -68,18 +77,26 @@ struct DistanceFromLocation {
   std::optional<Pair> pair_;
 
   /// @brief Constructor
-  constexpr DistanceFromLocation(real const u, real const distanceSquared) noexcept {
-    this->pair_ = {u, distanceSquared};
+  constexpr DistanceFromLocation(real const u,
+                                 real const distanceSquared) noexcept
+  {
+    this->pair_ = { u, distanceSquared };
   };
 
   /// @brief A default constructor
-  constexpr DistanceFromLocation() noexcept : pair_{std::nullopt} {}
+  constexpr DistanceFromLocation() noexcept
+    : pair_{ std::nullopt }
+  {
+  }
 
   /// @brief A copy constructor
-  constexpr DistanceFromLocation(DistanceFromLocation const &v) noexcept : pair_{v.pair_} {};
+  constexpr DistanceFromLocation(DistanceFromLocation const& v) noexcept
+    : pair_{ v.pair_ } {};
 
   /// @brief A copy operator
-  constexpr DistanceFromLocation &operator=(DistanceFromLocation const &v) noexcept {
+  constexpr DistanceFromLocation& operator=(
+    DistanceFromLocation const& v) noexcept
+  {
     this->pair_ = v.pair_;
 
     return *this;
@@ -94,7 +111,10 @@ struct DistanceFromLocation {
    *  @return true, if u is not infinity
    *  @return false, if u is infinity
    */
-  constexpr bool hasValidLocation() const noexcept { return this->pair_.has_value(); }
+  constexpr bool hasValidLocation() const noexcept
+  {
+    return this->pair_.has_value();
+  }
 
   /**
    *  @brief Get u
@@ -102,7 +122,8 @@ struct DistanceFromLocation {
    * @return infinity, if no value defined
    * @return stored u
    */
-  constexpr real getU() const noexcept {
+  constexpr real getU() const noexcept
+  {
     constexpr type const UNDEFINED = std::numeric_limits<type>::infinity();
     return this->pair_.has_value() ? this->pair_.value().u_ : UNDEFINED;
   }
@@ -113,12 +134,16 @@ struct DistanceFromLocation {
    * @return infinity, if no value defined
    * @return stored distance squared
    */
-  constexpr real getDistanceSquared() const noexcept {
+  constexpr real getDistanceSquared() const noexcept
+  {
     constexpr type const UNDEFINED = std::numeric_limits<type>::infinity();
-    return this->pair_.has_value() ? this->pair_.value().distanceSquared_ : UNDEFINED;
+    return this->pair_.has_value() ? this->pair_.value().distanceSquared_
+                                   : UNDEFINED;
   }
 
-  inline friend std::ostream &operator<<(std::ostream &out, DistanceFromLocation const data) {
+  inline friend std::ostream& operator<<(std::ostream& out,
+                                         DistanceFromLocation const data)
+  {
     out << "{";
     out << data.getU() << ", " << data.getDistanceSquared();
     out << "}";
@@ -129,12 +154,15 @@ struct DistanceFromLocation {
 } // namespace internal
 
 /**
- *  @brief The class to calculate rational bezier curves with control point of type 'CP', using either Point2<> or
- * Point3<>
+ *  @brief The class to calculate rational bezier curves with control point of
+ * type 'CP', using either Point2<> or Point3<>
  */
-template <class CP>
-requires std::is_same_v<CP, ControlPoint<typename CP::Point, typename CP::real>>
-class CalculateRational : private curve::bezier::rational::CalculationInterface<CP> {
+template<class CP>
+  requires std::is_same_v<CP,
+                          ControlPoint<typename CP::Point, typename CP::real>>
+class CalculateRational
+  : private curve::bezier::rational::CalculationInterface<CP>
+{
 public:
   using Interface = curve::bezier::rational::CalculationInterface<CP>;
 
@@ -149,16 +177,22 @@ public:
   using PointAtCurve = internal::PointAtCurve<Point, real>;
   using DistanceFromLocation = internal::DistanceFromLocation<real>;
 
-  static inline real constexpr const U_MIN = real(0); //< Minimum valid value of u
-  static inline real constexpr const U_MAX = real(1); //< Maximum valid value of u
+  static inline real constexpr const U_MIN =
+    real(0); //< Minimum valid value of u
+  static inline real constexpr const U_MAX =
+    real(1); //< Maximum valid value of u
 
   /**
-   *  @brief Move constructor for object to calculate rational bezier curve from given control points
+   *  @brief Move constructor for object to calculate rational bezier curve from
+   * given control points
    *
-   *  @param controlPoints read-only span from actual container of control points
+   *  @param controlPoints read-only span from actual container of control
+   * points
    */
-  constexpr CalculateRational(ControlPointSpan const &&controlPoints) noexcept
-      : controlPoints_(std::move(controlPoints)) {}
+  constexpr CalculateRational(ControlPointSpan const&& controlPoints) noexcept
+    : controlPoints_(std::move(controlPoints))
+  {
+  }
 
   /**
    *  @brief A default destructor
@@ -171,7 +205,8 @@ public:
    *
    *  @return Number of control points
    */
-  [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept {
+  [[nodiscard]] constexpr std::size_t numberOfControlPoints() const noexcept
+  {
     return this->controlPoints_.size();
   }
 
@@ -180,7 +215,10 @@ public:
    *
    *  @return reference to the span of control points
    */
-  [[nodiscard]] constexpr ControlPointSpan const &getSpan() const noexcept { return this->controlPoints_; }
+  [[nodiscard]] constexpr ControlPointSpan const& getSpan() const noexcept
+  {
+    return this->controlPoints_;
+  }
 
   /**
    *  @brief Function C(u) to calculate a point at 'u'. @see pointAt()
@@ -188,7 +226,8 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr Point C(real const u) const noexcept {
+  [[nodiscard]] constexpr Point C(real const u) const noexcept
+  {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -196,18 +235,21 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] =
+      [u](ControlPointSpan const cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) *
+          cp.w();
         sum_wp += (cp.p() * w);
         sum_w += w;
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(this->controlPoints_);
 
     std::optional<ConstPoint> const C_u = f_u / g_u;
@@ -220,7 +262,8 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr Point dC(real const u) const noexcept {
+  [[nodiscard]] constexpr Point dC(real const u) const noexcept
+  {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -233,37 +276,46 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const &cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] =
+      [u](
+        ControlPointSpan const& cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       real sum_w = real(0);
       Point sum_wp;
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) *
+          cp.w();
         sum_w += w;
         sum_wp += (cp.p() * w);
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(this->controlPoints_);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](ControlPointSpan const &cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [df_u, dg_u] =
+      [u](
+        ControlPointSpan const& cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::dB(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::dB(i, n, u) *
+          cp.w();
         sum_wp += cp.p() * w;
         sum_w += w;
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(this->controlPoints_);
 
     // C'(u) = (f'(u) * g(u) - f(u) * g'(u)) / g(u)^2
-    std::optional<ConstPoint> const dC_u = ((df_u * g_u) - (f_u * dg_u)) / (g_u * g_u);
+    std::optional<ConstPoint> const dC_u =
+      ((df_u * g_u) - (f_u * dg_u)) / (g_u * g_u);
     return dC_u.value();
   }
 
@@ -275,7 +327,9 @@ public:
    *  @param u a position from curve, range [0;1]
    *  @return a point from curve, depending type of 'CP', either 2D or 3D
    */
-  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints, real const u) noexcept {
+  [[nodiscard]] constexpr Point d2C(ControlPointSpan const controlPoints,
+                                    real const u) noexcept
+  {
     /**
        \f$C(u)=\frac{f(u)}{g(u)}\f$, where
        \f$f(u)=\underset{i=0}{\overset{n}{\sum}}B_{i,n}(u)w_{i}\mathbf{P}_{i}\f$
@@ -290,55 +344,68 @@ public:
     */
 
     // Calculate f(u) and g(u)
-    auto const [f_u, g_u] = [u](ControlPointSpan const &cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [f_u, g_u] =
+      [u](
+        ControlPointSpan const& cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       real sum_w = real(0);
       Point sum_wp;
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::B(i, n, u) *
+          cp.w();
         sum_w += w;
         sum_wp += (cp.p() * w);
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(controlPoints);
 
     // Calculate f'(u) and g'(u)
-    auto const [df_u, dg_u] = [u](ControlPointSpan const &cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [df_u, dg_u] =
+      [u](
+        ControlPointSpan const& cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::dB(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::dB(i, n, u) *
+          cp.w();
         sum_wp += cp.p() * w;
         sum_w += w;
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(controlPoints);
 
     // Calculate f"(u) and g"(u)
-    auto const [d2f_u, d2g_u] = [u](ControlPointSpan const &cps) noexcept -> std::tuple<ConstPoint, real> {
+    auto const [d2f_u, d2g_u] =
+      [u](
+        ControlPointSpan const& cps) noexcept -> std::tuple<ConstPoint, real> {
       std::size_t const n = cps.size() - 1u;
       Point sum_wp;
       real sum_w = real(0);
-      for (std::size_t i = 0u; auto const &cp : cps) {
-        real const w = curve::bezier::utilities::BernsteinPolynomials<real>::d2B(i, n, u) * cp.w();
+      for (std::size_t i = 0u; auto const& cp : cps) {
+        real const w =
+          curve::bezier::utilities::BernsteinPolynomials<real>::d2B(i, n, u) *
+          cp.w();
         sum_wp += cp.p() * w;
         sum_w += w;
 
         ++i;
       }
-      return {sum_wp, sum_w};
+      return { sum_wp, sum_w };
     }(controlPoints);
 
     // C"(u) = ( g'(u)^2 * f"(u) - g(u) * (2 * f'(u)*g'(u) + f(u) * g"(u)) + 2 *
     // f(u) * g'(u)^2) / g(u)^3
     std::optional<ConstPoint> const d2C_u =
-        (d2f_u * (dg_u * dg_u) - (df_u * (real(2) * dg_u) + f_u * d2g_u) * g_u + f_u * (real(2) * dg_u * dg_u)) /
-        (g_u * g_u * g_u);
+      (d2f_u * (dg_u * dg_u) - (df_u * (real(2) * dg_u) + f_u * d2g_u) * g_u +
+       f_u * (real(2) * dg_u * dg_u)) /
+      (g_u * g_u * g_u);
     return d2C_u.value();
   }
 
@@ -347,41 +414,49 @@ public:
    *
    *  @return the length of curve
    */
-  [[nodiscard]] constexpr real curveLength() const noexcept {
+  [[nodiscard]] constexpr real curveLength() const noexcept
+  {
     real constexpr REQUIRED_SEGMENT_LENGTH_ACCURACY = real(1e-6);
 
     real length = real(0);
-    auto const cumulate_segment_lengths = [&length](real const segment_length,
-                                                    PointAtCurve const segment_end) noexcept -> void {
+    auto const cumulate_segment_lengths =
+      [&length](real const segment_length,
+                PointAtCurve const segment_end) noexcept -> void {
       (void)segment_end;
       length += segment_length;
     };
 
-    this->approximateAsLinestring(this->numberOfControlPoints(), REQUIRED_SEGMENT_LENGTH_ACCURACY,
+    this->approximateAsLinestring(this->numberOfControlPoints(),
+                                  REQUIRED_SEGMENT_LENGTH_ACCURACY,
                                   cumulate_segment_lengths);
     return length;
   }
 
   /**
    *  @brief Generate an approximation of curve as a line string
-   *  NOTE: This might throw std::exception or std::bad_alloc, if heap allocation fails
+   *  NOTE: This might throw std::exception or std::bad_alloc, if heap
+   * allocation fails
    *
    *  @return a vector containing vertices between line segments
-   *  @return a vector containning a single vertex, if curve has only one control point
+   *  @return a vector containning a single vertex, if curve has only one
+   * control point
    */
-  [[nodiscard]] constexpr std::vector<Point> asLinestring() const {
+  [[nodiscard]] constexpr std::vector<Point> asLinestring() const
+  {
     std::size_t constexpr INITIAL_RESERVED_SIZE = 1024u;
     real constexpr REQUIRED_SEGMENT_LENGTH_ACCURACY = real(1e-6);
 
     std::vector<Point> segment_ends;
     segment_ends.reserve(INITIAL_RESERVED_SIZE); // Might throw
-    auto const cumulate_segment_lengths = [&segment_ends](real const segment_length,
-                                                          PointAtCurve const segment_end) noexcept -> void {
+    auto const cumulate_segment_lengths =
+      [&segment_ends](real const segment_length,
+                      PointAtCurve const segment_end) noexcept -> void {
       (void)segment_length;
       segment_ends.emplace_back(segment_end.point_); // Might throw
     };
 
-    this->approximateAsLinestring(this->numberOfControlPoints(), REQUIRED_SEGMENT_LENGTH_ACCURACY,
+    this->approximateAsLinestring(this->numberOfControlPoints(),
+                                  REQUIRED_SEGMENT_LENGTH_ACCURACY,
                                   cumulate_segment_lengths);
 
     return segment_ends;
@@ -390,12 +465,14 @@ public:
   /**
    *  @brief Find one of nearest point from curve to point 'p'.
    *  See documentation for @see closestCurvePointFor()
-   *  NOTE: This might throw std::exception or std::bad_alloc, if heap allocation fails
+   *  NOTE: This might throw std::exception or std::bad_alloc, if heap
+   * allocation fails
    *
    *  @param p The point used to calculate distances to the curve
    *  @return one of the nearest point from curve to point 'p'l
    */
-  [[nodiscard]] constexpr Point findNearestPointFor(ConstPoint p) const {
+  [[nodiscard]] constexpr Point findNearestPointFor(ConstPoint p) const
+  {
     real constexpr REQUIRED_SEGMENT_LENGTH_ACCURACY = real(1e-3);
 
     // Make a grude approximation of curve as a linestring and pick the top
@@ -435,7 +512,8 @@ public:
        \f$\frac{d^{2}}{du^{2}}D_{p}(u)=\underset{h\rightarrow0}{\lim}\frac{\frac{d}{du}D_{p}(u+h)-\frac{d}{du}D_{p}(u)}{h}\approx\frac{\triangle\frac{d}{du}D_{p}(u)}{\triangle
        u}\f$
     */
-    auto const d2DistanceSquared = [dDistanceSquared](real const u) noexcept -> real {
+    auto const d2DistanceSquared =
+      [dDistanceSquared](real const u) noexcept -> real {
       constexpr real du = real(1e-5);
       real const u_m = std::max(U_MIN, u - du);
       real const u_p = std::min(U_MAX, u + du);
@@ -450,29 +528,39 @@ public:
     real constexpr UPPER_BOUND = U_MAX;
     std::size_t constexpr NEWTON_MAX_ROUND_LIMIT = 20u;
 
-    // Reserve space for potential locations of minimum as tuples of distance^2 and u, might throw
+    // Reserve space for potential locations of minimum as tuples of distance^2
+    // and u, might throw
     std::vector<DistanceFromLocation> potential_minimums(N + 2u);
 
     // Minimum can be at end of ranges of u = [0;1]
-    potential_minimums.at(0u) = {U_MIN, distanceSquared(U_MIN)};
-    potential_minimums.at(1u) = {U_MAX, distanceSquared(U_MAX)};
+    potential_minimums.at(0u) = { U_MIN, distanceSquared(U_MIN) };
+    potential_minimums.at(1u) = { U_MAX, distanceSquared(U_MAX) };
 
-    // Minimum can be at location, where derivate of distance (squared) function is zero. Use Newton-Raphson method
-    // to find them by using the 1st and 2nd derivates (approximate) of distance (squared) function
+    // Minimum can be at location, where derivate of distance (squared) function
+    // is zero. Use Newton-Raphson method to find them by using the 1st and 2nd
+    // derivates (approximate) of distance (squared) function
     for (std::size_t i = 0u; i < N; ++i) {
       if (nearest.at(i).hasValidLocation()) {
-        std::optional<real> const has_root = curve::bezier::utilities::NewtonRaphson<real>::findRoot(
-            LOWER_BOUND, nearest.at(i).getU(), UPPER_BOUND, NEWTON_MAX_ROUND_LIMIT, dDistanceSquared,
+        std::optional<real> const has_root =
+          curve::bezier::utilities::NewtonRaphson<real>::findRoot(
+            LOWER_BOUND,
+            nearest.at(i).getU(),
+            UPPER_BOUND,
+            NEWTON_MAX_ROUND_LIMIT,
+            dDistanceSquared,
             d2DistanceSquared);
         if (has_root.has_value()) {
-          potential_minimums.at(i + 2u) = {has_root.value(), distanceSquared(has_root.value())};
+          potential_minimums.at(i + 2u) = { has_root.value(),
+                                            distanceSquared(has_root.value()) };
         }
       }
     }
 
     // Sort (asc) by distances
-    std::sort(potential_minimums.begin(), potential_minimums.end(),
-              [](DistanceFromLocation const &a, DistanceFromLocation const &b) noexcept -> bool {
+    std::sort(potential_minimums.begin(),
+              potential_minimums.end(),
+              [](DistanceFromLocation const& a,
+                 DistanceFromLocation const& b) noexcept -> bool {
                 return a.getDistanceSquared() < b.getDistanceSquared();
               });
 
@@ -482,8 +570,9 @@ public:
 
 protected:
   /**
-   *  @brief Approximate the curve with linestring. Initially split curve to 'initial_vertices' vertices and then
-   * continue to split segments between adjacent vertices until segment length varies at maximum of
+   *  @brief Approximate the curve with linestring. Initially split curve to
+   * 'initial_vertices' vertices and then continue to split segments between
+   * adjacent vertices until segment length varies at maximum of
    * 'max_segment_error'. A--B accept new vertex C,
    *                       \/
    *                       C
@@ -499,20 +588,27 @@ protected:
    *    B -- C
    *    @enduml
    *
-   *  NOTE: This might throw std::exception or std::bad_alloc, if heap allocation fails
+   *  NOTE: This might throw std::exception or std::bad_alloc, if heap
+   * allocation fails
    *
-   *  @param initial_vertices Amount of initial vertices before segment splitting start, minimum of 2
-   *  @param max_segment_error The amount of that new added vertice must change length of segments to accept segment
-   * split
-   *  @param pick_segment Function or lambda function to process accepted segments Function arguments are (real)
-   * segment length, segment as a pair of u value and segment end point. The segments are feed to function in
-   * reverse order.
+   *  @param initial_vertices Amount of initial vertices before segment
+   * splitting start, minimum of 2
+   *  @param max_segment_error The amount of that new added vertice must change
+   * length of segments to accept segment split
+   *  @param pick_segment Function or lambda function to process accepted
+   * segments Function arguments are (real) segment length, segment as a pair of
+   * u value and segment end point. The segments are feed to function in reverse
+   * order.
    */
-  constexpr void approximateAsLinestring(std::size_t const initial_vertices, real const max_segment_error,
-                                         std::function<void(real const, PointAtCurve const)> pick_segment) const {
+  constexpr void approximateAsLinestring(
+    std::size_t const initial_vertices,
+    real const max_segment_error,
+    std::function<void(real const, PointAtCurve const)> pick_segment) const
+  {
     std::vector<PointAtCurve> vertices;
     std::size_t constexpr INITIAL_RESERVATION = 1u << 10u;
-    vertices.reserve(std::max(INITIAL_RESERVATION, initial_vertices)); // Might throw
+    vertices.reserve(
+      std::max(INITIAL_RESERVATION, initial_vertices)); // Might throw
     constexpr std::size_t MINIMUM_AMOUNT = 2u;
 
     // Fill initial vertices
@@ -534,14 +630,16 @@ protected:
 
       // Split segment, until accurate enough
       for (;;) {
-        PointAtCurve const &segment_start = vertices.back();
-        real const single_segment_length = segment_start.point_.distance(segment_end.point_);
+        PointAtCurve const& segment_start = vertices.back();
+        real const single_segment_length =
+          segment_start.point_.distance(segment_end.point_);
 
         real const middle_u = real(0.5) * (segment_start.u_ + segment_end.u_);
 
         ConstPoint middle_point = this->C(middle_u);
         real const dual_segment_length =
-            segment_start.point_.distance(middle_point) + middle_point.distance(segment_end.point_);
+          segment_start.point_.distance(middle_point) +
+          middle_point.distance(segment_end.point_);
 
         if (dual_segment_length > (single_segment_length + max_segment_error)) {
           // Try again with a new start vertex for current segment
@@ -559,23 +657,30 @@ protected:
   }
 
   /**
-   *  @brief Select initial starting points for Newton-Raphson method to find a point from curve that is nearest to
-   * point 'p'. @see findNearestPointFor() generates a coarse linestring for curve and calculate distances from each
+   *  @brief Select initial starting points for Newton-Raphson method to find a
+   * point from curve that is nearest to point 'p'. @see findNearestPointFor()
+   * generates a coarse linestring for curve and calculate distances from each
    * vertex to point 'p'
    *
-   *  @param[inout] nearest the candidates to use with Newton-Raphson method as a pair of squared distance and 'u'
-   * Invalid guesses are marked as pair of <inf,inf>
+   *  @param[inout] nearest the candidates to use with Newton-Raphson method as
+   * a pair of squared distance and 'u' Invalid guesses are marked as pair of
+   * <inf,inf>
    *  @param p The point that is used to calculate (squared) distances
-   *  @param curveApproximation segment length error for generation of line string
+   *  @param curveApproximation segment length error for generation of line
+   * string
    */
-  constexpr void initialGuessesFromCurve(std::vector<DistanceFromLocation> &nearest, ConstPoint p,
-                                         real const curveApproximation) const noexcept {
-    for (auto &p : nearest) {
+  constexpr void initialGuessesFromCurve(
+    std::vector<DistanceFromLocation>& nearest,
+    ConstPoint p,
+    real const curveApproximation) const noexcept
+  {
+    for (auto& p : nearest) {
       p.pair_ = std::nullopt;
     }
 
-    auto const pickBestInitialGuesses = [p, &nearest](real const segment_length,
-                                                      PointAtCurve const segment_end) noexcept -> void {
+    auto const pickBestInitialGuesses =
+      [p, &nearest](real const segment_length,
+                    PointAtCurve const segment_end) noexcept -> void {
       (void)segment_length;
       ConstPoint difference = segment_end.point_ - p;
       real const distance_squared = difference.lengthSquared();
@@ -593,14 +698,17 @@ protected:
         ++i;
 
         // Move worse results
-        std::move_backward( nearest.begin() + i, nearest.end() - 1u, nearest.end() );
+        std::move_backward(
+          nearest.begin() + i, nearest.end() - 1u, nearest.end());
 
         // Save the new value
-        nearest.at(i) = {segment_end.u_, distance_squared};
+        nearest.at(i) = { segment_end.u_, distance_squared };
       }
     };
 
-    this->approximateAsLinestring(this->numberOfControlPoints(), curveApproximation, pickBestInitialGuesses);
+    this->approximateAsLinestring(this->numberOfControlPoints(),
+                                  curveApproximation,
+                                  pickBestInitialGuesses);
   }
 
 private:
