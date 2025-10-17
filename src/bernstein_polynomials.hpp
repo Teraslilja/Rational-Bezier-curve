@@ -13,6 +13,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <alloca.h>
+
 namespace curve::bezier::utilities {
 
 /**
@@ -29,7 +31,7 @@ namespace curve::bezier::utilities {
  *
  *  Doha, E H; Bhrawy, A H; Saker, M A.
  *  On the Derivatives of Bernstein Polynomials: An Application for the Solution
- * of High Even-Order Differential Equations, Boundary Value Problems; New York (2011).
+ *  of High Even-Order Differential Equations, Boundary Value Problems; New York (2011).
  */
 template <typename type = float>
 requires std::is_floating_point_v<type>
@@ -40,16 +42,16 @@ public:
 protected:
   /**
    *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
-   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive with multiplications
    *
    *  @param n "k objects can be chosen from among n objects", n >= k >= 0
    *  @param k "k objects can be chosen from among n objects", n >= k >= 0
    *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
    *  @return 0 otherwise
    */
-  [[nodiscard]] static constexpr std::size_t binomialRecursive(std::size_t const n, std::size_t const k) noexcept {
-    auto constexpr bin = [](std::size_t const n, std::size_t const k) -> std::size_t {
-      auto constexpr impl = [](auto&&self, std::size_t const n, std::size_t const k) -> std::size_t {
+  [[nodiscard]] static constexpr std::size_t binomialRecursiveMult(std::size_t const n, std::size_t const k) noexcept {
+    auto constexpr bin = [](std::size_t const n, std::size_t const k) constexpr -> std::size_t {
+      auto constexpr impl = [](auto&& self, std::size_t const n, std::size_t const k) constexpr -> std::size_t {
         switch (k) {
         case 0u:
           return 1u;
@@ -57,8 +59,37 @@ protected:
           return n;
         case 2u:
           return (n * (n - 1u)) >> 1u;
+        default:
+          return n * (self(self, n - 1u, k - 1u) / k);
         };
-        return (self(self, n - 1u, k - 1u) * n) / k;
+      };
+      return impl(impl, n, k);
+    };
+    return (k > n) ? 0u : bin(n, std::min(k,n-k));
+  }
+
+  /**
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive with sums
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @return 0 otherwise
+   */
+  [[nodiscard]] static std::size_t binomialRecursiveSum(std::size_t const n, std::size_t const k) noexcept {
+    auto constexpr bin = [](std::size_t const n, std::size_t const k) -> std::size_t {
+      auto constexpr impl = [](auto const&self, std::size_t const n, std::size_t const k) -> std::size_t {
+        switch (k) {
+        case 0u:
+          return 1u;
+        case 1u:
+          return n;
+        case 2u:
+          return (n * (n - 1u)) >> 1u;
+        default:
+          return self(self, n - 1u, k - 1u) + self(self, n - 1u, k);
+        };
       };
       return impl(impl, n, k);
     };
@@ -75,7 +106,7 @@ protected:
    *  @return 0 otherwise
    */
   [[nodiscard]] static constexpr std::size_t binomialFallingFactorial(std::size_t const n, std::size_t const k) noexcept {
-      auto constexpr impl = [](std::size_t const n, std::size_t const k) -> std::size_t {
+      auto constexpr impl = [](std::size_t const n, std::size_t const k) constexpr -> std::size_t {
           std::size_t const n2k = fallingFactorial(n, k);
           std::size_t const kFact = factorial(k);
 
@@ -114,38 +145,38 @@ protected:
    *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
    *  @return 0 otherwise
    */
-  [[nodiscard]] static constexpr std::size_t binomialInPlace(std::size_t const n, std::size_t k) noexcept {
-      if( k > n ) {
-          return 0;
-      }
-
-      k = std::min(k,n-k);
-      if( (n == 0) || (k==0)){
-          return 1;
-      }
-      else if ( k==1){
-          return n;
-      }
-      else{
-          std::vector<std::size_t> column(n<<2u,0);
-          std::size_t* prev = column.data();
-          std::size_t* curr = prev + n;
-
-          for( size_t i = 0; i <= n; ++i ){
-              prev[i]=1;
+  [[nodiscard]] static constexpr std::size_t binomialInPlace(std::size_t const n, std::size_t k) {
+      auto constexpr impl = [](std::size_t const n, std::size_t const k) constexpr -> std::size_t {
+          if( (n == 0) || (k==0)){
+              return 1;
           }
+          else if ( k==1) {
+              return n;
+          }
+          else {
+              // Automatically released after exiting the block
+              std::size_t*const column = reinterpret_cast<std::size_t*>(alloca(sizeof(std::size_t)*(n<<1u)));
+              std::size_t* prev = column;
+              std::size_t* curr = prev + n;
 
-          for( std::size_t i_k = 1; i_k <= k; ++i_k) {
-              curr[i_k]=1;
-              for( std::size_t j_n = i_k+1; j_n < n; ++j_n ) {
-                  curr[j_n] = curr[j_n - 1] + prev[j_n - 1];
+              for( size_t i = 0; i <= n; ++i ){
+                  prev[i]=1;
               }
 
-              std::swap(curr, prev);
-          }
+              for( std::size_t i_k = 1; i_k <= k; ++i_k) {
+                  curr[i_k]=1;
+                  for( std::size_t j_n = i_k+1; j_n < n; ++j_n ) {
+                      curr[j_n] = curr[j_n - 1] + prev[j_n - 1];
+                  }
 
-          return curr[n-1] + prev[n-1];
-      }
+                  std::swap(curr, prev);
+              }
+
+              return curr[n-1] + prev[n-1];
+          }
+      };
+
+      return ( k > n ) ? 0 : impl(n, std::min(k,n-k) );
   }
 
   /**
@@ -210,6 +241,19 @@ protected:
         }
     }
 
+  /**
+   *  @brief Calculate binomial coeffient \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ with the fastest implementation
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @return 0 otherwise
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n, std::size_t const k) noexcept {
+      return binomialInPlace( n, k);
+  }
+
+
 public:
   /**
    *  @brief Calculate Bernstein's polynomials \f$B_{i,n}(u)=\binom{n}{i}u^{i}(1-u)^{n-i}\f$
@@ -224,7 +268,7 @@ public:
     if ((i > n) || (n < 0) || (i < 0)) {
       return real(0);
     }
-    real const b = real(binomialRecursive(n, i)) * toIntegerPower(u, i) * toIntegerPower(real(1) - u, n - i);
+    real const b = real(binomial(n, i)) * toIntegerPower(u, i) * toIntegerPower(real(1) - u, n - i);
     return b;
   }
 

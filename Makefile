@@ -13,25 +13,49 @@ HEADERS = $(addprefix src/,$(addsuffix .hpp,$(BASE_FILES)))
 
 TESTS = test/main.cc test/point_tests.cc test/control_point_tests.cc test/bernstein_polynomials_tests.cc test/newton_raphson_tests.cc test/rational_bezier_tests.cc
 
+BENCHMARKS = bench/binomal.cc
+
 GTEST_DIR = /usr/src/googletest/googletest
 GTEST_SOURCE = -I $(GTEST_DIR) -I $(GTEST_DIR)/include $(GTEST_DIR)/src/gtest-all.cc
 GTEST_OBJECT = gtest-all.o
+GTEST_LIB = /usr/lib/x86_64-linux-gnu/libgtest.a
+#GTEST_LIB = /usr/local/lib/libgtest.a
+
+GMOCK_DIR = /usr/src/googletest/googletest
+GMOCK_SOURCE = -I $(GTEST_DIR) -I $(GTEST_DIR)/include $(GTEST_DIR)/src/gtest-all.cc
+GMOCK_OBJECT = gmock-all.o
+GMOCK_LIB = /usr/lib/x86_64-linux-gnu/libgmock.a
+#GMOCK_LIB = /usr/local/lib/libgmock.a
+
+#BENCHMARK_DIR = /usr/include
+BENCHMARK_DIR = /usr/local/include
+BENCHMARK_SOURCE = -I $(BENCHMARK_DIR)
+#BENCHMARK_LIB = /usr/lib/x86_64-linux-gnu/libbenchmark.so
+BENCHMARK_LIB = /usr/local/lib/libbenchmark.a
 
 LIBS=
 #LIBS+=-l gtest        #  libgtest-dev
 #LIBS+=-l gmock      #  libgmock-dev
-#LIBS+=-l benchmark  #  libbenchmark-dev
+LIBS+=-L /usr/local/lib/
+LIBS+=-l benchmark  #  libbenchmark-dev
 
 # Which compiler?
-CC=g++-13
+CC=g++-14
 #CC=clang++-14 -flto=full
 
 rb_test: gtest-tool $(TESTS) $(SOURCES) $(HEADERS)
 	@-rm rb_test 2> /dev/null
 	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -O3 -DNDEBUG $(INCLUDE_DIRS) -xc++ $(TESTS) $(SOURCES) $(GTEST_SOURCE) $(LIBS) -o rb_test
 
-test: gtest-tool rb_test
+test: gtest-tool rb_test $(SOURCES) $(HEADERS)
 	./rb_test
+
+bm_test: benchmark-tool $(BENCHMARKS)
+	@-rm bm_test 2> /dev/null
+	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -fconstexpr-depth=1024  -O3 -DNDEBUG $(INCLUDE_DIRS) -xc++ $(BENCHMARKS) $(SOURCES) $(HEADERS) $(LIBS) -o bm_test
+
+benchmark: benchmark-tool bm_test
+	./bm_test --benchmark_report_aggregates_only=true
 
 rb_coverage: coverage-tool $(TESTS) $(SOURCES) $(HEADERS)
 	@-rm *.gcno *.gcda 2> /dev/null
@@ -60,7 +84,7 @@ doc/html/index.html: doxygen-tool Doxyfile $(SOURCES) $(HEADERS)
 doc: doxygen-tool doc/html/index.html $(SOURCES) $(HEADERS)
 	@echo "See detailed documentation at file " $(realpath ./doc/html/index.html)
 
-all: doc test coverage
+all: doc test benchmark coverage
 
 clean:
 	@-rm -rf rb_test rb_coverage *.gcno *.gcda *.info coverage/ doc/ 2> /dev/null
@@ -77,15 +101,15 @@ cppcheck: cppcheck-tool $(TESTS) $(SOURCES) $(HEADERS)
 
 
 # Install Google Test?
-gtest-tool: /usr/local/lib/libgtest.a
+gtest-tool: $(GTEST_LIB)
 	@echo "Install Google test library: sudo apt-get install libgtest-dev"
 
 # Install Google Mock?
-gmock-tool: /usr/local/lib/libgmock.a
+gmock-tool: $(GMOCK_LIB)
 	@echo "Install Google mock library: sudo apt-get install libgmock-dev"
 
 # Install Google Benchmark?
-benchmark-tool: /usr/lib/x86_64-linux-gnu/libbenchmark.so
+benchmark-tool: $(BENCHMARK_LIB)
 	@echo "Install Google benchmark library: sudo apt-get install libbenchmark-dev"
 
 # Install cppcheck?
