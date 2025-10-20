@@ -13,7 +13,7 @@ HEADERS = $(addprefix src/,$(addsuffix .hpp,$(BASE_FILES)))
 
 TESTS = test/main.cc test/point_tests.cc test/control_point_tests.cc test/bernstein_polynomials_tests.cc test/newton_raphson_tests.cc test/rational_bezier_tests.cc
 
-BENCHMARKS = bench/binomal.cc
+BENCHMARKS = bench/binomial.cc
 
 GTEST_DIR = /usr/src/googletest/googletest
 GTEST_SOURCE = -I $(GTEST_DIR) -I $(GTEST_DIR)/include $(GTEST_DIR)/src/gtest-all.cc
@@ -52,7 +52,7 @@ test: gtest-tool rb_test $(SOURCES) $(HEADERS)
 
 bm_test: benchmark-tool $(BENCHMARKS)
 	@-rm bm_test 2> /dev/null
-	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -fconstexpr-depth=1024  -O3 -DNDEBUG $(INCLUDE_DIRS) -xc++ $(BENCHMARKS) $(SOURCES) $(HEADERS) $(LIBS) -o bm_test
+	$(CC) --std=c++20 -Wall -Wextra -Werror -pedantic -O3 -DNDEBUG $(INCLUDE_DIRS) -xc++ $(BENCHMARKS) $(SOURCES) $(HEADERS) $(LIBS) -o bm_test
 
 benchmark: benchmark-tool bm_test
 	./bm_test --benchmark_report_aggregates_only=true
