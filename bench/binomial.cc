@@ -22,42 +22,42 @@ struct Tests
     std::size_t const n,
     std::size_t const k) noexcept
   {
-    return naive::binomial(n, k);
+    return Naive::binomial(n, k);
   }
 
   [[nodiscard]] static inline constexpr std::size_t binomialFallingFactorial(
     std::size_t const n,
     std::size_t const k) noexcept
   {
-    return falling_factorial::binomial(n, k);
+    return FallingFactorial::binomial(n, k);
   }
 
   [[nodiscard]] static inline std::size_t
   binomialMultiplicationWithoutRecursion(std::size_t const n,
                                          std::size_t const k) noexcept
   {
-    return multiplication_without_recursion::binomial(n, k);
+    return MultiplicationWithoutRecursion::binomial(n, k);
   }
 
   [[nodiscard]] static inline constexpr std::size_t
   binomialMultiplicationWithRecursion(std::size_t const n,
                                       std::size_t const k) noexcept
   {
-    return multiplication_with_recursion::binomial(n, k);
+    return MultiplicationWithRecursion::binomial(n, k);
   }
 
   [[nodiscard]] static inline std::size_t binomialSumWithoutRecursion(
     std::size_t const n,
     std::size_t const k) noexcept
   {
-    return sum_without_recursion::binomial(n, k);
+    return SumWithoutRecursion::binomial(n, k);
   }
 
   [[nodiscard]] static inline std::size_t binomialSumWithRecursion(
     std::size_t const n,
     std::size_t const k) noexcept
   {
-    return sum_with_recursion::binomial(n, k);
+    return SumWithRecursion::binomial(n, k);
   }
 
   [[nodiscard]] static inline std::size_t binomial(std::size_t const n,
@@ -196,17 +196,15 @@ BENCHMARK(BM_SumWithRecursion)->EXEC1(REPEATIONS, MAX_BENCH_SIZE);
 BENCHMARK(BM_Binomial)->EXEC1(REPEATIONS, MAX_BENCH_SIZE);
 #endif
 
-BENCHMARK(BM_Naive)->EXEC2(naive::maximumAllowedN);
-BENCHMARK(BM_FallingFactorial)->EXEC2(falling_factorial::maximumAllowedN);
+BENCHMARK(BM_Naive)->EXEC2(Naive::maximumAllowedN);
+BENCHMARK(BM_FallingFactorial)->EXEC2(FallingFactorial::maximumAllowedN);
 BENCHMARK(BM_MultiplicationWithoutRecursion)
-  ->EXEC2(multiplication_without_recursion::maximumAllowedN);
+  ->EXEC2(MultiplicationWithoutRecursion::maximumAllowedN);
 BENCHMARK(BM_MultiplicationWithRecursion)
-  ->EXEC2(multiplication_with_recursion::maximumAllowedN);
-BENCHMARK(BM_SumWithoutRecursion)
-  ->EXEC2(sum_without_recursion::maximumAllowedN);
-BENCHMARK(BM_SumWithRecursion)
-  ->EXEC2(std::min(std::size_t(25), sum_with_recursion::maximumAllowedN));
-BENCHMARK(BM_Binomial)->EXEC2(sum_without_recursion::maximumAllowedN);
+  ->EXEC2(MultiplicationWithRecursion::maximumAllowedN);
+BENCHMARK(BM_SumWithoutRecursion)->EXEC2(SumWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_SumWithRecursion)->EXEC2(SumWithRecursion::maximumAllowedN);
+BENCHMARK(BM_Binomial)->EXEC2(SumWithoutRecursion::maximumAllowedN);
 
 BENCHMARK(BM_Naive)->EXEC3(5);
 BENCHMARK(BM_FallingFactorial)->EXEC3(5);
@@ -216,28 +214,41 @@ BENCHMARK(BM_SumWithoutRecursion)->EXEC3(5);
 BENCHMARK(BM_SumWithRecursion)->EXEC3(5);
 BENCHMARK(BM_Binomial)->EXEC3(5);
 
-BENCHMARK(BM_Naive)->EXEC3(20);
-BENCHMARK(BM_FallingFactorial)->EXEC3(20);
-BENCHMARK(BM_MultiplicationWithoutRecursion)->EXEC3(20);
-BENCHMARK(BM_MultiplicationWithRecursion)->EXEC3(20);
-BENCHMARK(BM_SumWithoutRecursion)->EXEC3(20);
-// BENCHMARK(BM_SumWithRecursion)->EXEC3(20); Too slow
-BENCHMARK(BM_Binomial)->EXEC3(20);
+BENCHMARK(BM_Naive)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_FallingFactorial)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithoutRecursion)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithRecursion)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_SumWithoutRecursion)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_SumWithRecursion)->EXEC3(Naive::maximumAllowedN);
+BENCHMARK(BM_Binomial)->EXEC3(Naive::maximumAllowedN);
 
-// BENCHMARK(BM_Naive)->EXEC3(29);    Too large N
-BENCHMARK(BM_FallingFactorial)->EXEC3(29);
-BENCHMARK(BM_MultiplicationWithoutRecursion)->EXEC3(29);
-BENCHMARK(BM_MultiplicationWithRecursion)->EXEC3(29);
-BENCHMARK(BM_SumWithoutRecursion)->EXEC3(29);
-// BENCHMARK(BM_SumWithRecursion)->EXEC3(29);
-BENCHMARK(BM_Binomial)->EXEC3(29);
+// BENCHMARK(BM_Naive)->EXEC3(FallingFactorial::maximumAllowedN);    Too large N
+BENCHMARK(BM_FallingFactorial)->EXEC3(FallingFactorial::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithoutRecursion)
+  ->EXEC3(FallingFactorial::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithRecursion)
+  ->EXEC3(FallingFactorial::maximumAllowedN);
+BENCHMARK(BM_SumWithoutRecursion)->EXEC3(FallingFactorial::maximumAllowedN);
+// BENCHMARK(BM_SumWithRecursion)->EXEC3(FallingFactorial::maximumAllowedN);
+BENCHMARK(BM_Binomial)->EXEC3(FallingFactorial::maximumAllowedN);
 
-// BENCHMARK(BM_Naive)->EXEC3(67);
-// BENCHMARK(BM_FallingFactorial)->EXEC3( 67);
-BENCHMARK(BM_MultiplicationWithoutRecursion)->EXEC3(67);
-BENCHMARK(BM_MultiplicationWithRecursion)->EXEC3(67);
-BENCHMARK(BM_SumWithoutRecursion)->EXEC3(67);
-// BENCHMARK(BM_SumWithRecursion)->EXEC3(67);
-BENCHMARK(BM_Binomial)->EXEC3(67);
+// BENCHMARK(BM_Naive)->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_FallingFactorial)->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithoutRecursion)
+  ->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_MultiplicationWithRecursion)
+  ->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_SumWithoutRecursion)
+  ->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_SumWithRecursion)->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_Binomial)->EXEC3(MultiplicationWithoutRecursion::maximumAllowedN);
+
+// BENCHMARK(BM_Naive)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_FallingFactorial)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_MultiplicationWithoutRecursion)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_MultiplicationWithRecursion)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_SumWithoutRecursion)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+// BENCHMARK(BM_SumWithRecursion)->EXEC3(SumWithoutRecursion::maximumAllowedN);
+BENCHMARK(BM_Binomial)->EXEC3(SumWithoutRecursion::maximumAllowedN);
 
 BENCHMARK_MAIN();

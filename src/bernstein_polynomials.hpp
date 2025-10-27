@@ -10,7 +10,7 @@
 #ifndef BERNSTEIN_POLYNOMIALS_H
 #define BERNSTEIN_POLYNOMIALS_H
 
-#include <cassert>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -156,432 +156,405 @@ public:
 };
 
 namespace binomial {
-//! Implmentation interface
-//! Contract: 0 <= k <= n/2, n <= maximumAllowedN
-using binomialFunc = std::size_t (*)(std::size_t const,
-                                     std::size_t const) noexcept;
-
-namespace naive {
-using namespace curve::bezier::utilities;
-
-struct F : public Factorial<std::size_t, std::size_t>
+struct Naive : private Factorial<std::size_t, std::size_t>
 {
+private:
   using Base = Factorial<std::size_t, std::size_t>;
-  using Base::maximumAllowedN;
-};
 
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as naive
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-binomialFunc constexpr impl =
-  [](std::size_t const n,
-     std::size_t const k) constexpr noexcept -> std::size_t {
-  std::size_t const nF = F::factorial(n);
-  std::size_t const nkF = F::factorial(n - k);
-  std::size_t const kF = F::factorial(k);
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as naive
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n,
+                                    std::size_t const k) noexcept
+  {
+    std::size_t const nF = factorial(n);
+    std::size_t const nkF = factorial(n - k);
+    std::size_t const kF = factorial(k);
 
-  return (nF / nkF) / kF;
-};
-
-//! Maximum allowed n for implementation
-static constexpr std::size_t const maximumAllowedN = F::maximumAllowedN;
-
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if k > n
- *  @throw std::domain_error, if n is too large
- */
-[[nodiscard]] static constexpr std::size_t
-binomial(std::size_t const n, std::size_t k)
-{
-  assert(k <= n);
-  if (n > maximumAllowedN) [[unlikely]] {
-    throw std::domain_error("Argument n is too large!");
-  }
-  return impl(n, std::min(k, n - k));
-}
-}
-
-namespace falling_factorial {
-using namespace curve::bezier::utilities;
-
-struct F : public Factorial<std::size_t, std::size_t>
-{
-  using Base = Factorial<std::size_t, std::size_t>;
-  using Base::maximumAllowedN;
-};
-
-struct FF : public FallingFactorial<std::size_t, std::size_t>
-{
-  using Base = FallingFactorial<std::size_t, std::size_t>;
-  using Base::maximumAllowedN;
-};
-
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
- *         \f$\binom{n}{k}=\begin{cases}\frac{n^{k}}{k!} &
- * \mathrm{if}\:k\leq\frac{n}{2}\\\frac{n^{\left(n-k\right)}}{\left(n-k\right)!}
- * & \mathrm{if}\:k>\frac{n}{2}\end{cases}\f$ or falling factorial
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-binomialFunc constexpr impl =
-  [](std::size_t const n,
-     std::size_t const k) constexpr noexcept -> std::size_t {
-  std::size_t const n2k = FF::fallingFactorial(n, k);
-  std::size_t const kFact = F::factorial(k);
-
-  return n2k / kFact;
-};
-
-//! Maximum allowed n for implementation
-static constexpr std::size_t const maximumAllowedN = FF::maximumAllowedN;
-
-//! Maximum allowed k for implementation
-static constexpr std::size_t const maximumAllowedK = F::maximumAllowedN;
-
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if n is too large
- *  @throw std::domain_error, if k is too large
- */
-[[nodiscard]] static constexpr std::size_t
-binomial(std::size_t const n, std::size_t const k)
-{
-  if (n > maximumAllowedN) [[unlikely]] {
-    throw std::domain_error("Argument n is too large!");
-  }
-  if (k > maximumAllowedK) [[unlikely]] {
-    throw std::domain_error("Argument k is too large!");
+    return (nF / nkF) / kF;
   }
 
-  return impl(n, std::min(k, n - k));
-}
-}
+public:
+  //! Maximum allowed n for implementation
+  using Base::maximumAllowedN;
 
-namespace multiplication_without_recursion {
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
- *         \f$\binom{n}{k}=n*\binom{n-1}{k-1}/k\f$ without recursion
- *
- * \f$\binom{6}{3}=20:\f$
- *   1
- *   1   1
- *   1   2    1
- *  _1_  3    3    1                       (3 0) = 1
- *   1  _4_   6    4   1                 4*(3 0)/1 = 4*1/1 = 4
- *   1   5  _10_  10   5 1               5*(4 1)/2 = 5*4/2 = 10
- *   1   6   15  _20_ 15 6 1 6th row (n) 6*(5 2)/3 = 6*10/3 = 20
- *                 ^ 3nd column (k)
- *
- *  @paramf n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-binomialFunc constexpr impl = [](std::size_t const n,
-                                 std::size_t const k) noexcept -> std::size_t {
-  switch (k) {
-    case 0u:
-      return 1u;
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if k > n
+   *  @throw std::domain_error, if n is too large
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n,
+                                                      std::size_t k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
+    return impl(n, std::min(k, n - k));
+  }
+};
 
-    case 1u:
-      return n;
+struct FallingFactorial
+  : private Factorial<std::size_t, std::size_t>
+  , private curve::bezier::utilities::FallingFactorial<std::size_t, std::size_t>
+{
+private:
+  using BaseF = Factorial<std::size_t, std::size_t>;
+  using BaseFF =
+    curve::bezier::utilities::FallingFactorial<std::size_t, std::size_t>;
 
-    case 2u:
-      return (n * (n - 1u)) >> 1u;
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\begin{cases}\frac{n^{k}}{k!} &
+   * \mathrm{if}\:k\leq\frac{n}{2}\\\frac{n^{\left(n-k\right)}}{\left(n-k\right)!}
+   * & \mathrm{if}\:k>\frac{n}{2}\end{cases}\f$ or falling factorial
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n,
+                                    std::size_t const k) noexcept
+  {
+    std::size_t const n2k = fallingFactorial(n, k);
+    std::size_t const kFact = factorial(k);
 
-    [[likely]] default:
-      std::size_t diagonal = (n * (n - 1)) >> 1u;
-      for (std::size_t i_k = 3, i_n = n - k; i_k < k; ++i_k, ++i_n) {
-        diagonal = i_n * (diagonal / i_k);
+    return n2k / kFact;
+  }
+
+public:
+  //! Maximum allowed n for implementation
+  static constexpr std::size_t const maximumAllowedN = BaseFF::maximumAllowedN;
+
+  //! Maximum allowed k for implementation
+  static constexpr std::size_t const maximumAllowedK = BaseF::maximumAllowedN;
+
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if n is too large
+   *  @throw std::domain_error, if k is too large
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n,
+                                                      std::size_t const k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
+    if (k > maximumAllowedK) [[unlikely]] {
+      throw std::domain_error("Argument k is too large!");
+    }
+
+    return impl(n, std::min(k, n - k));
+  }
+};
+
+struct MultiplicationWithoutRecursion
+{
+private:
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=n*\binom{n-1}{k-1}/k\f$ without recursion
+   *
+   *
+   * \f$\binom{4}{0} =  1 =        (1)/(0!)\f$
+   * \f$\binom{5}{1} =  5 =        (5)/(1)       = 5*\binom{4}{0}/1\f$
+   * \f$\binom{6}{2} = 15 =      (6*5)/(2*1)     = 6*\binom{5}{1}/2\f$
+   * \f$\binom{7}{3} = 35 =    (7*6*5)/(3*2*1)   = 7*\binom{6}{2}/3\f$
+   * \f$\binom{8}{4} = 70 =  (8*7*6*5)/(4*3*2*1) = 8*\binom{7}{3}/4\f$
+   *
+   *  @paramf n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n,
+                                    std::size_t const k) noexcept
+  {
+    switch (k) {
+      case 0u:
+        return 1u;
+
+      case 1u:
+        return n;
+
+      case 2u:
+        return (n * (n - 1u)) >> 1u;
+
+      [[likely]] default:
+        std::size_t i_k = 2;
+        std::size_t i_n = n - (k - i_k);
+        std::size_t diagonal = (i_n * (i_n - 1u)) >> 1u;
+        for (++i_k, ++i_n; i_k <= k; ++i_k, ++i_n) {
+          diagonal = (i_n * diagonal) / i_k;
+        }
+
+        return diagonal;
+    }
+  };
+
+public:
+  //! Maximum allowed n for implementation
+  static constexpr std::size_t const maximumAllowedN =
+    []() consteval noexcept -> std::size_t {
+    auto constexpr I =
+      [](std::size_t const n,
+         std::size_t const k) consteval noexcept -> std::size_t {
+      std::size_t i_k = 2;
+      std::size_t i_n = n - (k - i_k);
+      std::size_t diagonal = (i_n * (i_n - 1u)) >> 1u;
+      for (++i_k, ++i_n; i_k <= k; ++i_k, ++i_n) {
+        diagonal = (i_n * diagonal) / i_k;
       }
 
       return diagonal;
+    };
+    std::size_t n = FallingFactorial::maximumAllowedN;
+    std::size_t k = n >> 1u;
+    std::size_t prev = I(n, k);
+    std::size_t next;
+    for (++n, k = n >> 1u; prev < (next = I(n, k)); ++n, k = n >> 1u) {
+      prev = next;
+    }
+    return n - 1u;
+  }();
+
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if k > n
+   *  @throw std::domain_error, if n is too large
+   */
+  [[nodiscard]] static inline std::size_t binomial(std::size_t const n,
+                                                   std::size_t k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
+
+    return impl(n, std::min(k, n - k));
   }
 };
 
-//! Maximum allowed n for implementation
-static constexpr std::size_t const maximumAllowedN =
-  []() consteval noexcept -> std::size_t {
-  constexpr long double const availableBits =
-    std::numeric_limits<std::size_t>::digits;
-  std::size_t n = 1;
-  std::size_t prevBinomial = impl(n, n >> 1u);
-
-  std::size_t bits;
-  do {
-    ++n;
-    std::size_t const k = n >> 1u;
-    std::size_t const binomial = impl(n, n >> 1u);
-    bits = std::log2(static_cast<long double>(n)) +
-           std::log2(static_cast<long double>(prevBinomial)) -
-           std::log2(static_cast<long double>(k));
-    prevBinomial = binomial;
-  } while (bits < availableBits);
-
-  return n - 1;
-}();
-
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if k > n
- *  @throw std::domain_error, if n is too large
- */
-[[nodiscard]] static inline std::size_t
-binomial(std::size_t const n, std::size_t k)
+struct MultiplicationWithRecursion
 {
-  assert(k <= n);
-  if (n <= maximumAllowedN) [[likely]] {
-    return impl(n, std::min(k, n - k));
-  } else {
-    throw std::domain_error("Argument n is too large!");
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\frac{n}{k}*\binom{n-1}{k-1}\f$ or recursive
+   * with multiplications
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n,
+                                    std::size_t const k) noexcept
+  {
+    switch (k) {
+      case 0u:
+        return 1u;
+
+      case 1u:
+        return n;
+
+      case 2u:
+        return (n * (n - 1u)) >> 1u;
+
+      [[likely]] default:
+        return (n * impl(n - 1u, k - 1u)) / k;
+    }
   }
-}
-}
 
-namespace multiplication_with_recursion {
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
- *         \f$\binom{n}{k}=\frac{n}{k}*\binom{n-1}{k-1}\f$ or recursive
- * with multiplications
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-static constexpr std::size_t
-impl(std::size_t const n, std::size_t const k) noexcept
+  //! Maximum allowed n for implementation
+  static constexpr std::size_t const maximumAllowedN =
+    MultiplicationWithoutRecursion::maximumAllowedN;
+
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if n is too large
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n,
+                                                      std::size_t const k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
+    return impl(n, std::min(k, n - k));
+  }
+};
+
+struct SumWithoutRecursion
 {
-  switch (k) {
-    case 0u:
-      return 1u;
+  //! Maximum allowed n for implementation
+  static std::size_t const maximumAllowedN =
+    []() consteval noexcept -> std::size_t {
+    constexpr long double const maxBits =
+      std::numeric_limits<std::size_t>::digits;
+    for (std::size_t n = FallingFactorial::maximumAllowedN;; ++n) {
+      std::size_t k = n >> 1u;
+      std::size_t nk = n - k;
 
-    case 1u:
+      long double bits = 0;
+      for (std::size_t i_n = n; i_n > nk; --i_n) {
+        bits += std::log2(static_cast<long double>(i_n));
+      }
+      for (std::size_t i_k = 2u; i_k <= k; ++i_k) {
+        bits -= std::log2(static_cast<long double>(i_k));
+      }
+      if (bits >= maxBits) {
+        return n - 1u;
+      }
+    }
+  }();
+
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ with in place
+   * vector \f$\binom{6}{3}=20:\f$
+   *   1
+   *   1  1
+   *   1 _2_   1
+   *   1 _3_  _3_   1
+   *   1 _4_  _6_  _4_  1
+   *   1  5  _10_ _10_  5 1
+   *   1  6   15  _20_ 15 6 1 6th row (n)
+   *                ^ 3nd column (k)
+   *
+   *  @paramf n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n,
+                                    std::size_t const k) noexcept
+  {
+    if ((n == 0u) || (k == 0u)) {
+      return 1u;
+    } else if (k == 1u) {
       return n;
+    } else {
+      std::array<std::size_t, maximumAllowedN + 1u> column1;
+      std::array<std::size_t, maximumAllowedN + 1u> column2;
+      std::size_t* prev = column1.data();
+      std::size_t* curr = column2.data();
+      std::size_t const nk = n - k + 1u;
 
-    case 2u:
-      return (n * (n - 1u)) >> 1u;
-
-    [[likely]] default:
-      return n * (impl(n - 1u, k - 1u) / k);
-  }
-}
-
-//! Maximum allowed n for implementation
-static constexpr std::size_t const maximumAllowedN =
-  []() consteval noexcept -> std::size_t {
-  constexpr long double const availableBits =
-    std::numeric_limits<std::size_t>::digits;
-  std::size_t n = 1;
-  std::size_t prevBinomial = impl(n, n >> 1u);
-
-  std::size_t bits;
-  do {
-    ++n;
-    std::size_t const k = n >> 1u;
-    std::size_t const binomial = impl(n, n >> 1u);
-    bits = std::log2(static_cast<long double>(n)) +
-           std::log2(static_cast<long double>(prevBinomial)) -
-           std::log2(static_cast<long double>(k));
-    prevBinomial = binomial;
-  } while (bits < availableBits);
-
-  return n - 1;
-}();
-
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if n is too large
- */
-[[nodiscard]] static constexpr std::size_t
-binomial(std::size_t const n, std::size_t const k)
-{
-  assert(k <= n);
-  if (n <= maximumAllowedN) [[likely]] {
-    return impl(n, std::min(k, n - k));
-  } else {
-    throw std::domain_error("Argument n is too large!");
-  }
-}
-}
-
-namespace sum_without_recursion {
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
- *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ with in place
- *
- * vector \f$\binom{6}{3}=20:\f$
- *   1
- *   1  1
- *   1 _2_   1
- *   1 _3_  _3_   1
- *   1 _4_  _6_  _4_  1
- *   1  5  _10_ _10_  5 1
- *   1  6   15  _20_ 15 6 1 6th row (n)
- *                ^ 3nd column (k)
- *
- *  @paramf n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-binomialFunc const impl = [](std::size_t const n,
-                             std::size_t const k) noexcept -> std::size_t {
-  if ((n == 0) || (k == 0)) {
-    return 1;
-  } else if (k == 1) {
-    return n;
-  } else {
-    constexpr std::size_t const maxPossibleN =
-      multiplication_without_recursion::maximumAllowedN + 1;
-    std::size_t* const columns = reinterpret_cast<std::size_t*>(
-      alloca(sizeof(std::size_t) * (maxPossibleN << 1u)));
-    std::size_t* prev = columns;
-    std::size_t* curr = prev + n;
-    std::size_t const nk = n - k + 1;
-
-    // Column k=0, rows 0..n-k
-    for (size_t j_n = 0; j_n < nk; ++j_n) {
-      prev[j_n] = 1;
-    }
-
-    // Columns 1..k
-    for (std::size_t i_k = 1; i_k <= k; ++i_k) {
-      // Row k
-      curr[i_k] = 1;
-
-      // Rows k+1..(n-k) + i_k
-      std::size_t const lastRow = nk + i_k;
-      for (std::size_t j_n = i_k + 1; j_n < lastRow; ++j_n) {
-        curr[j_n] = curr[j_n - 1] + prev[j_n - 1];
+      // Column k=0, rows 0..n-k
+      for (size_t j_n = 0u; j_n < nk; ++j_n) {
+        prev[j_n] = 1u;
       }
 
-      std::swap(curr, prev);
-    }
+      // Columns 1..k
+      for (std::size_t i_k = 1u; i_k <= k; ++i_k) {
+        // Row k
+        curr[i_k] = 1u;
 
-    return curr[n - 1] + prev[n - 1];
+        // Rows k+1..(n-k) + i_k
+        std::size_t const lastRow = nk + i_k;
+        for (std::size_t j_n = i_k + 1u; j_n < lastRow; ++j_n) {
+          curr[j_n] = curr[j_n - 1u] + prev[j_n - 1u];
+        }
+
+        std::swap(curr, prev);
+      }
+
+      return curr[n - 1u] + prev[n - 1u];
+    }
+  }
+
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if n is too large
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n,
+                                                      std::size_t const k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
+    return impl(n, std::min(k, n - k));
   }
 };
 
-//! Maximum allowed n for implementation
-static std::size_t const maximumAllowedN =
-  []() constexpr noexcept -> std::size_t {
-  std::size_t prevN = 2;
-  std::size_t prevB = impl(prevN, prevN >> 1u);
-  do {
-    std::size_t const n = prevN + 1;
-    std::size_t const b = impl(n, n >> 1u);
-    if (b > prevB) {
-      prevB = b;
-      ++prevN;
-    } else {
-      return prevN;
+struct SumWithRecursion
+{
+  /**
+   *  @brief Calculate binomial coeffient
+   * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
+   *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive
+   * with sums
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
+   */
+  static constexpr std::size_t impl(std::size_t const n, std::size_t k) noexcept
+  {
+    switch (n) {
+      case 0u:
+      case 1u:
+        return 1u;
+
+      [[likely]] default:
+        switch (k) {
+          case 0u:
+            return 1u;
+
+          case 1u:
+            return n;
+
+          [[likely]] default:
+            return impl(n - 1u, k - 1u) + impl(n - 1u, std::min(k, n - k - 1u));
+        }
     }
-  } while (true);
-}();
+  }
 
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if k > n
- *  @throw std::domain_error, if n is too large
- */
-[[nodiscard]] static inline std::size_t
-binomial(std::size_t const n, std::size_t k)
-{
-  assert(k <= n);
-  if (n <= maximumAllowedN) [[likely]] {
+  //! Maximum allowed n for implementation, very slow ..
+  static std::size_t constexpr maximumAllowedN = std::min(
+    std::size_t(25),
+    curve::bezier::utilities::binomial::SumWithoutRecursion::maximumAllowedN);
+
+  /**
+   *  @brief Calculate binomial coeffient
+   *
+   *  @param n "k objects can be chosen from among n objects", n >= k >= 0
+   *  @param k "k objects can be chosen from among n objects", n >= k >= 0
+   *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
+   *  @throw std::domain_error, if n is too large
+   */
+  [[nodiscard]] static constexpr std::size_t binomial(std::size_t const n,
+                                                      std::size_t const k)
+  {
+    if (n > maximumAllowedN) [[unlikely]] {
+      throw std::domain_error("Argument n is too large!");
+    }
     return impl(n, std::min(k, n - k));
-  } else {
-    throw std::domain_error("Argument n is too large!");
   }
-}
-}
-
-namespace sum_with_recursion {
-/**
- *  @brief Calculate binomial coeffient
- * \f$\binom{n}{k}=\frac{n!}{k!\left(n-k\right)!}\f$ as
- *         \f$\binom{n}{k}=\binom{n-1}{k-1}+\binom{n-1}{k}\f$ or recursive
- * with sums
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= 2*k >= 0
- */
-static constexpr std::size_t
-impl(std::size_t const n, std::size_t k) noexcept
-{
-  switch (n) {
-    case 0u:
-    case 1u:
-      return 1u;
-
-    [[likely]] default:
-      switch (k) {
-        case 0u:
-          return 1u;
-
-        case 1u:
-          return n;
-
-        [[likely]] default:
-          return impl(n - 1u, k - 1u) + impl(n - 1u, std::min(k, n - 1 - k));
-      }
-  }
-}
-
-//! Maximum allowed n for implementation
-static std::size_t const maximumAllowedN =
-  curve::bezier::utilities::binomial::sum_without_recursion::maximumAllowedN;
-
-/**
- *  @brief Calculate binomial coeffient
- *
- *  @param n "k objects can be chosen from among n objects", n >= k >= 0
- *  @param k "k objects can be chosen from among n objects", n >= k >= 0
- *  @return \f$\binom{n}{k}\f$, if n >= k >= 0
- *  @throw std::domain_error, if n is too large
- */
-[[nodiscard]] static inline std::size_t
-binomial(std::size_t const n, std::size_t const k)
-{
-  if (n <= maximumAllowedN) [[likely]] {
-    return impl(n, std::min(k, n - k));
-  } else {
-    throw std::domain_error("Argument n is too large!");
-  }
-}
-}
+};
 
 /**
  *  @brief Calculate binomial coeffient \f$\binom{n}{k}\f$
@@ -594,19 +567,10 @@ binomial(std::size_t const n, std::size_t const k)
 [[nodiscard]] static inline std::size_t
 binomial(std::size_t const n, std::size_t const k)
 {
-  if (k <= n) [[likely]] {
-    if (n < 6) {
-      return multiplication_with_recursion::binomial(n, k);
-    } else if (n < 9) {
-      return multiplication_without_recursion::binomial(n, k);
-    } else if (n <= falling_factorial::maximumAllowedN) {
-      return falling_factorial::binomial(n, k);
-    } else {
-      return multiplication_without_recursion::binomial(n, k);
-    }
-  } else {
+  if (k > n) [[unlikely]] {
     throw std::domain_error("Argument k > n!");
   }
+  return SumWithoutRecursion::binomial(n, k);
 }
 }
 
